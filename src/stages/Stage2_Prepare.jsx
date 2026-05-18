@@ -20,6 +20,125 @@ const MICRO_TEXT = {
   7: 'All six healing compounds converge, forming the ultimate Kadha healing stream! 👑',
 }
 
+// ─── ArjunFace — CSS-animated character that physically reacts ───────────────
+// mood: 'neutral' | 'happy' | 'wrong' | 'yuck' | 'excited'
+function ArjunFace({ mood }) {
+  const isHappy    = mood === 'happy' || mood === 'excited'
+  const isWrong    = mood === 'wrong'
+  const isYuck     = mood === 'yuck'
+  const isExcited  = mood === 'excited'
+
+  // Mouth path: smile, frown, wavy, gape
+  const mouthPath = isExcited
+    ? 'M 8 14 Q 18 24 28 14'          // big grin
+    : isHappy
+    ? 'M 10 14 Q 18 22 26 14'         // smile
+    : isWrong
+    ? 'M 10 18 Q 18 10 26 18'         // frown
+    : isYuck
+    ? 'M 8 16 Q 13 12 18 16 Q 23 20 28 16' // wavy
+    : 'M 11 15 Q 18 17 25 15'         // neutral line
+
+  // Eye shapes
+  const eyeScaleY = isWrong ? 0.4 : isYuck ? 0.5 : isExcited ? 1.3 : 1
+  const eyeColor  = isWrong ? '#FF5252' : isHappy ? '#1565C0' : '#2a2a2a'
+
+  return (
+    <motion.div
+      key={mood}
+      animate={
+        isWrong   ? { x: [-4, 4, -3, 3, -2, 2, 0], transition: { duration: 0.45 } } :
+        isExcited ? { y: [0, -6, 0, -4, 0], transition: { duration: 0.5 } } :
+        isHappy   ? { y: [0, -3, 0], transition: { duration: 0.4 } } :
+        { x: 0, y: 0 }
+      }
+      style={{ position: 'relative', width: 52, height: 62, flexShrink: 0 }}>
+
+      {/* Body */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+        width: 32, height: 22, borderRadius: '6px 6px 0 0',
+        background: isHappy ? '#1976D2' : isWrong ? '#455A64' : '#37474F',
+      }} />
+
+      {/* Head */}
+      <div style={{
+        position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+        width: 40, height: 40, borderRadius: '50%',
+        background: '#FFCC80',
+        border: `2px solid ${isWrong ? '#FF5252' : isHappy ? '#FFB300' : '#E6A800'}`,
+        overflow: 'hidden',
+        boxShadow: isExcited ? '0 0 10px rgba(255,215,0,0.6)' : 'none',
+      }}>
+        {/* Face SVG */}
+        <svg viewBox="0 0 36 36" width="100%" height="100%">
+          {/* Left eye */}
+          <ellipse cx="11" cy="15" rx="3" ry={3 * eyeScaleY} fill={eyeColor} />
+          {/* Right eye */}
+          <ellipse cx="25" cy="15" rx="3" ry={3 * eyeScaleY} fill={eyeColor} />
+          {/* Star pupils when excited */}
+          {isExcited && <>
+            <polygon points="11,11 11.8,13.4 14,13.4 12.2,14.8 12.8,17.2 11,15.8 9.2,17.2 9.8,14.8 8,13.4 10.2,13.4" fill="#FFD700" />
+            <polygon points="25,11 25.8,13.4 28,13.4 26.2,14.8 26.8,17.2 25,15.8 23.2,17.2 23.8,14.8 22,13.4 24.2,13.4" fill="#FFD700" />
+          </>}
+          {/* X eyes when yuck */}
+          {isYuck && <>
+            <line x1="8" y1="12" x2="14" y2="18" stroke="#FF5252" strokeWidth="2" strokeLinecap="round" />
+            <line x1="14" y1="12" x2="8" y2="18" stroke="#FF5252" strokeWidth="2" strokeLinecap="round" />
+            <line x1="22" y1="12" x2="28" y2="18" stroke="#FF5252" strokeWidth="2" strokeLinecap="round" />
+            <line x1="28" y1="12" x2="22" y2="18" stroke="#FF5252" strokeWidth="2" strokeLinecap="round" />
+          </>}
+          {/* Eyebrows */}
+          <line x1="8" y1={isWrong ? "11" : isHappy ? "9" : "11"}
+                x2="14" y2={isWrong ? "9" : isHappy ? "11" : "11"}
+                stroke="#8D6E63" strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="22" y1={isWrong ? "9" : isHappy ? "11" : "11"}
+                x2="28" y2={isWrong ? "11" : isHappy ? "9" : "11"}
+                stroke="#8D6E63" strokeWidth="1.5" strokeLinecap="round" />
+          {/* Mouth */}
+          <path d={mouthPath} stroke="#5D4037" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+          {/* Open mouth fill when excited */}
+          {isExcited && <path d="M 8 14 Q 18 24 28 14 Q 18 30 8 14" fill="#E53935" opacity="0.7" />}
+          {/* Rosy cheeks when happy/excited */}
+          {isHappy && <>
+            <ellipse cx="7" cy="21" rx="4" ry="2.5" fill="rgba(255,100,100,0.35)" />
+            <ellipse cx="29" cy="21" rx="4" ry="2.5" fill="rgba(255,100,100,0.35)" />
+          </>}
+        </svg>
+      </div>
+
+      {/* Sweat drops when wrong */}
+      {isWrong && [
+        { x: 44, y: 2, delay: 0 },
+        { x: 48, y: 10, delay: 0.15 },
+      ].map((s, i) => (
+        <motion.div key={i}
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: [0, 1, 0], y: [s.y - 4, s.y + 8] }}
+          transition={{ duration: 0.8, delay: s.delay, repeat: 2 }}
+          style={{
+            position: 'absolute', left: s.x, top: s.y,
+            width: 5, height: 7, borderRadius: '50% 50% 50% 0',
+            transform: 'rotate(-45deg)',
+            background: '#40C4FF', opacity: 0.8,
+          }} />
+      ))}
+
+      {/* Stars when excited */}
+      {isExcited && ['✦', '✧'].map((s, i) => (
+        <motion.span key={i}
+          animate={{ scale: [0, 1.4, 0], rotate: [0, 180] }}
+          transition={{ duration: 0.6, delay: i * 0.15, repeat: 2 }}
+          style={{
+            position: 'absolute',
+            top: i === 0 ? -4 : 0, left: i === 0 ? -6 : 48,
+            fontSize: '0.9rem', color: '#FFD700',
+          }}>{s}</motion.span>
+      ))}
+    </motion.div>
+  )
+}
+
 // ─── GrindBowl — drag-to-grind mechanic ──────────────────────────────────────
 // User drags the pestle LEFT/RIGHT across the mortar to grind ingredients.
 // Total horizontal distance dragged (500 px total) = 100% crushed.
@@ -551,12 +670,12 @@ export default function Stage2_Prepare() {
     }
   }, [phase, stirProgress])
 
-  // Heat complete → microscope
+  // Heat complete → microscope when temperature enters target range
   useEffect(() => {
-    if (phase === 'heat' && temperature >= 85) {
+    if (phase === 'heat' && remedy && temperature >= remedy.targetTemp - 5) {
       setTimeout(() => setPhase('microscope'), 800)
     }
-  }, [phase, temperature])
+  }, [phase, temperature, remedy])
 
   // Heating interval
   useEffect(() => {
@@ -1323,9 +1442,14 @@ export default function Stage2_Prepare() {
   }
 
   // ═══ SELECT PHASE — Bowl (left) + Shelf (right) ═══
-  // Arjun face mood map
-  const moodFace = { neutral: '😐', happy: '😄', wrong: '🤧', yuck: '🤢', ouch: '😖', excited: '🤩' }
-  const moodColor = { neutral: 'rgba(255,255,255,0.12)', happy: 'rgba(0,200,83,0.25)', wrong: 'rgba(255,80,80,0.25)', yuck: 'rgba(200,100,0,0.25)', ouch: 'rgba(255,80,80,0.3)', excited: 'rgba(255,215,0,0.3)' }
+  const moodColor = {
+    neutral: 'rgba(255,255,255,0.07)',
+    happy:   'rgba(0,200,83,0.15)',
+    wrong:   'rgba(255,80,80,0.15)',
+    yuck:    'rgba(200,100,0,0.15)',
+    ouch:    'rgba(255,80,80,0.2)',
+    excited: 'rgba(255,215,0,0.15)',
+  }
 
   return (
     <motion.div
@@ -1342,7 +1466,7 @@ export default function Stage2_Prepare() {
         {remedy.icon} Prepare {remedy.name}
       </motion.h2>
       <p className="game-text" style={{ color: 'var(--color-text-secondary)', textAlign: 'center', fontSize: '0.9rem' }}>
-        What should go in? Experiment and observe Arjun's reaction! ({addedIngredients.length}/{remedy.correctSet.length})
+        What should go in? Experiment and observe Arjun! ({addedIngredients.length}/{remedy.correctSet.length})
       </p>
 
       {/* ── Arjun Character Panel ── */}
@@ -1350,38 +1474,41 @@ export default function Stage2_Prepare() {
         animate={{ background: moodColor[arjunMood] }}
         transition={{ duration: 0.3 }}
         style={{
-          display: 'flex', alignItems: 'center', gap: '12px',
-          padding: '10px 16px', borderRadius: '20px',
-          border: `1px solid ${arjunMood === 'wrong' ? 'rgba(255,80,80,0.3)' : arjunMood === 'happy' || arjunMood === 'excited' ? 'rgba(0,200,83,0.3)' : 'rgba(255,255,255,0.1)'}`,
-          maxWidth: '340px', width: '100%', minHeight: '60px',
+          display: 'flex', alignItems: 'center', gap: '14px',
+          padding: '10px 18px', borderRadius: '20px',
+          border: `1px solid ${
+            arjunMood === 'wrong' ? 'rgba(255,80,80,0.35)' :
+            arjunMood === 'happy' || arjunMood === 'excited' ? 'rgba(0,200,83,0.35)' :
+            'rgba(255,255,255,0.1)'
+          }`,
+          maxWidth: '340px', width: '100%', minHeight: '68px',
         }}>
-        {/* Face */}
-        <motion.div
-          key={arjunMood}
-          animate={arjunMood === 'wrong' ? { rotate: [-5, 5, -4, 4, 0], scale: [1, 1.2, 1] } : arjunMood === 'happy' || arjunMood === 'excited' ? { scale: [1, 1.3, 1] } : { scale: 1 }}
-          transition={{ duration: 0.4 }}
-          style={{ fontSize: '2rem', flexShrink: 0 }}>
-          {moodFace[arjunMood]}
-        </motion.div>
+        {/* CSS-animated Arjun face */}
+        <ArjunFace mood={arjunMood} />
         {/* Speech bubble */}
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: '2px' }}>Arjun says:</p>
+          <p style={{ fontSize: '0.68rem', fontWeight: 700, color: 'rgba(255,255,255,0.38)', marginBottom: '3px' }}>Arjun says:</p>
           <AnimatePresence mode="wait">
             {arjunSpeech ? (
               <motion.p key={arjunSpeech}
                 initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                style={{ fontSize: '0.85rem', fontWeight: 600, color: arjunMood === 'wrong' ? '#FF8A65' : arjunMood === 'happy' || arjunMood === 'excited' ? '#69F0AE' : 'rgba(255,255,255,0.7)', lineHeight: 1.3 }}>
+                style={{
+                  fontSize: '0.85rem', fontWeight: 600, lineHeight: 1.3,
+                  color: arjunMood === 'wrong' ? '#FF8A65' : arjunMood === 'happy' || arjunMood === 'excited' ? '#69F0AE' : 'rgba(255,255,255,0.75)',
+                }}>
                 {arjunSpeech}
               </motion.p>
             ) : (
               <motion.p key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)', fontStyle: 'italic' }}>
-                {addedIngredients.length === 0 ? 'Waiting for you to start...' : `${remedy.correctSet.length - addedIngredients.length} more ingredient${remedy.correctSet.length - addedIngredients.length !== 1 ? 's' : ''} needed`}
+                style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.32)', fontStyle: 'italic' }}>
+                {addedIngredients.length === 0
+                  ? 'Waiting for you to start...'
+                  : `${remedy.correctSet.length - addedIngredients.length} more ingredient${remedy.correctSet.length - addedIngredients.length !== 1 ? 's' : ''} needed`}
               </motion.p>
             )}
           </AnimatePresence>
         </div>
-        {/* Wrong count indicator */}
+        {/* Wrong count badge */}
         {wrongCount > 0 && (
           <div style={{ flexShrink: 0, textAlign: 'center' }}>
             <p style={{ fontSize: '0.6rem', color: 'rgba(255,100,100,0.6)' }}>wrong</p>

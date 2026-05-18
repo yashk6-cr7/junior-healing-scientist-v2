@@ -20,119 +20,147 @@ const MICRO_TEXT = {
   7: 'All six healing compounds converge, forming the ultimate Kadha healing stream! 👑',
 }
 
-// ─── ArjunFace — CSS-animated character that physically reacts ───────────────
+// ─── ArjunFace — Full-body animated SVG character (120×170px) ──────────────
 // mood: 'neutral' | 'happy' | 'wrong' | 'yuck' | 'excited'
 function ArjunFace({ mood }) {
-  const isHappy    = mood === 'happy' || mood === 'excited'
-  const isWrong    = mood === 'wrong'
-  const isYuck     = mood === 'yuck'
-  const isExcited  = mood === 'excited'
+  const isHappy   = mood === 'happy' || mood === 'excited'
+  const isWrong   = mood === 'wrong'
+  const isYuck    = mood === 'yuck'
+  const isExcited = mood === 'excited'
 
-  // Mouth path: smile, frown, wavy, gape
-  const mouthPath = isExcited
-    ? 'M 8 14 Q 18 24 28 14'          // big grin
-    : isHappy
-    ? 'M 10 14 Q 18 22 26 14'         // smile
-    : isWrong
-    ? 'M 10 18 Q 18 10 26 18'         // frown
-    : isYuck
-    ? 'M 8 16 Q 13 12 18 16 Q 23 20 28 16' // wavy
-    : 'M 11 15 Q 18 17 25 15'         // neutral line
+  // Mouth paths (large, drawn in 60x60 face area centred at cx=55)
+  const mouth = isExcited ? 'M 36 57 Q 55 74 74 57'   // huge grin
+    : isHappy  ? 'M 40 56 Q 55 70 70 56'              // smile
+    : isWrong  ? 'M 40 64 Q 55 52 70 64'              // frown
+    : isYuck   ? 'M 36 60 Q 45 54 55 60 Q 65 66 74 60'// wavy
+    : 'M 42 60 Q 55 62 68 60'                          // neutral
 
-  // Eye shapes
-  const eyeScaleY = isWrong ? 0.4 : isYuck ? 0.5 : isExcited ? 1.3 : 1
-  const eyeColor  = isWrong ? '#FF5252' : isHappy ? '#1565C0' : '#2a2a2a'
+  // Eye scale
+  const eyeRy   = isWrong ? 2 : isYuck ? 2.5 : isExcited ? 8 : 6
+  const eyeCol  = isWrong ? '#EF5350' : isHappy ? '#1565C0' : '#1a1a1a'
+  // Eyebrow y offsets (inner/outer)
+  const LBrow = isWrong  ? { x1:38,y1:32,x2:52,y2:28 }  // angry
+              : isHappy  ? { x1:38,y1:27,x2:52,y2:30 }  // raised happy
+              :             { x1:38,y1:30,x2:52,y2:30 }  // flat
+  const RBrow = isWrong  ? { x1:58,y1:28,x2:72,y2:32 }
+              : isHappy  ? { x1:58,y1:30,x2:72,y2:27 }
+              :             { x1:58,y1:30,x2:72,y2:30 }
+
+  // Shirt colour
+  const shirtCol = isHappy ? '#1976D2' : isWrong ? '#546E7A' : '#37474F'
+  // Arm positions
+  const armL = isExcited ? 'M 35 110 Q 10 90 15 72' : isWrong ? 'M 35 110 Q 12 118 14 136' : 'M 35 110 Q 15 120 18 140'
+  const armR = isExcited ? 'M 75 110 Q 100 90 95 72' : isWrong ? 'M 75 110 Q 98 118 96 136' : 'M 75 110 Q 95 120 92 140'
 
   return (
     <motion.div
       key={mood}
       animate={
-        isWrong   ? { x: [-4, 4, -3, 3, -2, 2, 0], transition: { duration: 0.45 } } :
-        isExcited ? { y: [0, -6, 0, -4, 0], transition: { duration: 0.5 } } :
-        isHappy   ? { y: [0, -3, 0], transition: { duration: 0.4 } } :
-        { x: 0, y: 0 }
+        isWrong   ? { x: [-5, 5, -4, 4, -2, 2, 0], transition: { duration: 0.5 } } :
+        isExcited ? { y: [0, -10, 0, -7, 0],        transition: { duration: 0.55 } } :
+        isHappy   ? { y: [0, -5, 0],                transition: { duration: 0.4 } } :
+        {}
       }
-      style={{ position: 'relative', width: 52, height: 62, flexShrink: 0 }}>
+      style={{ position: 'relative', width: 110, height: 175, flexShrink: 0 }}>
 
-      {/* Body */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: 32, height: 22, borderRadius: '6px 6px 0 0',
-        background: isHappy ? '#1976D2' : isWrong ? '#455A64' : '#37474F',
-      }} />
+      <svg viewBox="0 0 110 175" width="110" height="175" style={{ overflow: 'visible' }}>
 
-      {/* Head */}
-      <div style={{
-        position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
-        width: 40, height: 40, borderRadius: '50%',
-        background: '#FFCC80',
-        border: `2px solid ${isWrong ? '#FF5252' : isHappy ? '#FFB300' : '#E6A800'}`,
-        overflow: 'hidden',
-        boxShadow: isExcited ? '0 0 10px rgba(255,215,0,0.6)' : 'none',
-      }}>
-        {/* Face SVG */}
-        <svg viewBox="0 0 36 36" width="100%" height="100%">
-          {/* Left eye */}
-          <ellipse cx="11" cy="15" rx="3" ry={3 * eyeScaleY} fill={eyeColor} />
-          {/* Right eye */}
-          <ellipse cx="25" cy="15" rx="3" ry={3 * eyeScaleY} fill={eyeColor} />
-          {/* Star pupils when excited */}
-          {isExcited && <>
-            <polygon points="11,11 11.8,13.4 14,13.4 12.2,14.8 12.8,17.2 11,15.8 9.2,17.2 9.8,14.8 8,13.4 10.2,13.4" fill="#FFD700" />
-            <polygon points="25,11 25.8,13.4 28,13.4 26.2,14.8 26.8,17.2 25,15.8 23.2,17.2 23.8,14.8 22,13.4 24.2,13.4" fill="#FFD700" />
-          </>}
-          {/* X eyes when yuck */}
-          {isYuck && <>
-            <line x1="8" y1="12" x2="14" y2="18" stroke="#FF5252" strokeWidth="2" strokeLinecap="round" />
-            <line x1="14" y1="12" x2="8" y2="18" stroke="#FF5252" strokeWidth="2" strokeLinecap="round" />
-            <line x1="22" y1="12" x2="28" y2="18" stroke="#FF5252" strokeWidth="2" strokeLinecap="round" />
-            <line x1="28" y1="12" x2="22" y2="18" stroke="#FF5252" strokeWidth="2" strokeLinecap="round" />
-          </>}
-          {/* Eyebrows */}
-          <line x1="8" y1={isWrong ? "11" : isHappy ? "9" : "11"}
-                x2="14" y2={isWrong ? "9" : isHappy ? "11" : "11"}
-                stroke="#8D6E63" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="22" y1={isWrong ? "9" : isHappy ? "11" : "11"}
-                x2="28" y2={isWrong ? "11" : isHappy ? "9" : "11"}
-                stroke="#8D6E63" strokeWidth="1.5" strokeLinecap="round" />
-          {/* Mouth */}
-          <path d={mouthPath} stroke="#5D4037" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-          {/* Open mouth fill when excited */}
-          {isExcited && <path d="M 8 14 Q 18 24 28 14 Q 18 30 8 14" fill="#E53935" opacity="0.7" />}
-          {/* Rosy cheeks when happy/excited */}
-          {isHappy && <>
-            <ellipse cx="7" cy="21" rx="4" ry="2.5" fill="rgba(255,100,100,0.35)" />
-            <ellipse cx="29" cy="21" rx="4" ry="2.5" fill="rgba(255,100,100,0.35)" />
-          </>}
-        </svg>
-      </div>
+        {/* ── Shadow ── */}
+        <ellipse cx="55" cy="171" rx="28" ry="5" fill="rgba(0,0,0,0.25)" />
 
-      {/* Sweat drops when wrong */}
-      {isWrong && [
-        { x: 44, y: 2, delay: 0 },
-        { x: 48, y: 10, delay: 0.15 },
-      ].map((s, i) => (
-        <motion.div key={i}
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: [0, 1, 0], y: [s.y - 4, s.y + 8] }}
-          transition={{ duration: 0.8, delay: s.delay, repeat: 2 }}
-          style={{
-            position: 'absolute', left: s.x, top: s.y,
-            width: 5, height: 7, borderRadius: '50% 50% 50% 0',
-            transform: 'rotate(-45deg)',
-            background: '#40C4FF', opacity: 0.8,
-          }} />
-      ))}
+        {/* ── Legs ── */}
+        <rect x="37" y="148" width="14" height="22" rx="5" fill="#1A237E" />
+        <rect x="59" y="148" width="14" height="22" rx="5" fill="#1A237E" />
+        {/* Shoes */}
+        <ellipse cx="44" cy="170" rx="10" ry="5" fill="#212121" />
+        <ellipse cx="66" cy="170" rx="10" ry="5" fill="#212121" />
 
-      {/* Stars when excited */}
-      {isExcited && ['✦', '✧'].map((s, i) => (
+        {/* ── Body / Shirt ── */}
+        <rect x="28" y="108" width="54" height="44" rx="10" fill={shirtCol} />
+        {/* Shirt collar V */}
+        <path d="M 44 108 L 55 122 L 66 108" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" />
+        {/* Shirt highlight */}
+        <rect x="28" y="108" width="54" height="10" rx="10" fill="rgba(255,255,255,0.08)" />
+
+        {/* ── Arms ── */}
+        <path d={armL} fill="none" stroke={shirtCol} strokeWidth="13" strokeLinecap="round" />
+        <path d={armR} fill="none" stroke={shirtCol} strokeWidth="13" strokeLinecap="round" />
+        {/* Hands */}
+        <circle cx={isExcited ? 15 : 18} cy={isExcited ? 72 : 140} r="8" fill="#FFCC80" />
+        <circle cx={isExcited ? 95 : 92} cy={isExcited ? 72 : 140} r="8" fill="#FFCC80" />
+
+        {/* ── Neck ── */}
+        <rect x="47" y="98" width="16" height="13" rx="4" fill="#FFCC80" />
+
+        {/* ── Head ── */}
+        <ellipse cx="55" cy="62" rx="34" ry="36"
+          fill="#FFCC80"
+          stroke={isWrong ? '#EF5350' : isExcited ? '#FFD700' : '#E6A800'}
+          strokeWidth="2"
+        />
+        {isExcited && <ellipse cx="55" cy="62" rx="34" ry="36" fill="none" stroke="#FFD700" strokeWidth="3" opacity="0.4" />}
+
+        {/* ── Hair ── */}
+        <ellipse cx="55" cy="30" rx="32" ry="18" fill="#3E2723" />
+        <ellipse cx="55" cy="38" rx="34" ry="8" fill="#3E2723" />
+        {/* Hair tuft */}
+        <ellipse cx="55" cy="24" rx="10" ry="8" fill="#3E2723" />
+        <ellipse cx="38" cy="28" rx="8" ry="6" fill="#3E2723" />
+        <ellipse cx="72" cy="28" rx="8" ry="6" fill="#3E2723" />
+
+        {/* ── Eyes ── */}
+        <ellipse cx="41" cy="62" rx="7" ry={eyeRy} fill={eyeCol} />
+        <ellipse cx="69" cy="62" rx="7" ry={eyeRy} fill={eyeCol} />
+        {/* Eye shine */}
+        {!isWrong && !isYuck && <>
+          <circle cx="44" cy="58" r="2.5" fill="white" opacity="0.9" />
+          <circle cx="72" cy="58" r="2.5" fill="white" opacity="0.9" />
+        </>}
+        {/* Star eyes when excited */}
+        {isExcited && <>
+          <polygon points="41,54 42.5,58.5 47,58.5 43.5,61.5 44.5,66 41,63 37.5,66 38.5,61.5 35,58.5 39.5,58.5" fill="#FFD700" />
+          <polygon points="69,54 70.5,58.5 75,58.5 71.5,61.5 72.5,66 69,63 65.5,66 66.5,61.5 63,58.5 67.5,58.5" fill="#FFD700" />
+        </>}
+        {/* X-eyes when yuck */}
+        {isYuck && <>
+          <line x1="35" y1="56" x2="47" y2="68" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
+          <line x1="47" y1="56" x2="35" y2="68" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
+          <line x1="63" y1="56" x2="75" y2="68" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
+          <line x1="75" y1="56" x2="63" y2="68" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
+        </>}
+
+        {/* ── Eyebrows ── */}
+        <line x1={LBrow.x1} y1={LBrow.y1} x2={LBrow.x2} y2={LBrow.y2} stroke="#4E342E" strokeWidth="3" strokeLinecap="round" />
+        <line x1={RBrow.x1} y1={RBrow.y1} x2={RBrow.x2} y2={RBrow.y2} stroke="#4E342E" strokeWidth="3" strokeLinecap="round" />
+
+        {/* ── Nose ── */}
+        <path d="M 52 70 Q 55 76 58 70" fill="none" stroke="#BF8A6E" strokeWidth="1.5" strokeLinecap="round" />
+
+        {/* ── Mouth ── */}
+        <path d={mouth} fill="none" stroke="#5D4037" strokeWidth="3" strokeLinecap="round" />
+        {/* Teeth when excited */}
+        {isExcited && <path d="M 40 58 Q 55 72 70 58 L 70 65 Q 55 77 40 65 Z" fill="white" opacity="0.85" />}
+        {/* Rosy cheeks when happy */}
+        {isHappy && <>
+          <ellipse cx="28" cy="74" rx="9" ry="5" fill="rgba(255,120,100,0.3)" />
+          <ellipse cx="82" cy="74" rx="9" ry="5" fill="rgba(255,120,100,0.3)" />
+        </>}
+        {/* Sweat drops when wrong */}
+        {isWrong && <>
+          <ellipse cx="91" cy="46" rx="4" ry="6" fill="#40C4FF" opacity="0.75" />
+          <ellipse cx="97" cy="60" rx="3" ry="5" fill="#40C4FF" opacity="0.55" />
+        </>}
+      </svg>
+
+      {/* Sparkles when excited */}
+      {isExcited && ['✦','✧','✦'].map((s, i) => (
         <motion.span key={i}
-          animate={{ scale: [0, 1.4, 0], rotate: [0, 180] }}
-          transition={{ duration: 0.6, delay: i * 0.15, repeat: 2 }}
+          animate={{ scale: [0, 1.5, 0], rotate: [0, 200] }}
+          transition={{ duration: 0.7, delay: i * 0.15, repeat: 2 }}
           style={{
             position: 'absolute',
-            top: i === 0 ? -4 : 0, left: i === 0 ? -6 : 48,
-            fontSize: '0.9rem', color: '#FFD700',
+            top: [4, -4, 12][i], left: [92, 50, 104][i],
+            fontSize: '1.1rem', color: '#FFD700', pointerEvents: 'none',
           }}>{s}</motion.span>
       ))}
     </motion.div>
@@ -1474,47 +1502,46 @@ export default function Stage2_Prepare() {
         animate={{ background: moodColor[arjunMood] }}
         transition={{ duration: 0.3 }}
         style={{
-          display: 'flex', alignItems: 'center', gap: '14px',
-          padding: '10px 18px', borderRadius: '20px',
-          border: `1px solid ${
-            arjunMood === 'wrong' ? 'rgba(255,80,80,0.35)' :
-            arjunMood === 'happy' || arjunMood === 'excited' ? 'rgba(0,200,83,0.35)' :
-            'rgba(255,255,255,0.1)'
+          display: 'flex', alignItems: 'center', gap: '20px',
+          padding: '16px 22px', borderRadius: '24px',
+          border: `2px solid ${
+            arjunMood === 'wrong' ? 'rgba(255,80,80,0.4)' :
+            arjunMood === 'happy' || arjunMood === 'excited' ? 'rgba(0,200,83,0.4)' :
+            'rgba(255,255,255,0.12)'
           }`,
-          maxWidth: '340px', width: '100%', minHeight: '68px',
+          maxWidth: '460px', width: '100%',
         }}>
-        {/* CSS-animated Arjun face */}
+        {/* Full-body Arjun character */}
         <ArjunFace mood={arjunMood} />
-        {/* Speech bubble */}
-        <div style={{ flex: 1 }}>
-          <p style={{ fontSize: '0.68rem', fontWeight: 700, color: 'rgba(255,255,255,0.38)', marginBottom: '3px' }}>Arjun says:</p>
+        {/* Speech area */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <p style={{ fontSize: '0.72rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Arjun says:</p>
           <AnimatePresence mode="wait">
             {arjunSpeech ? (
               <motion.p key={arjunSpeech}
-                initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 style={{
-                  fontSize: '0.85rem', fontWeight: 600, lineHeight: 1.3,
-                  color: arjunMood === 'wrong' ? '#FF8A65' : arjunMood === 'happy' || arjunMood === 'excited' ? '#69F0AE' : 'rgba(255,255,255,0.75)',
+                  fontSize: '1.05rem', fontWeight: 700, lineHeight: 1.45,
+                  color: arjunMood === 'wrong' ? '#FF8A65' : arjunMood === 'happy' || arjunMood === 'excited' ? '#69F0AE' : 'rgba(255,255,255,0.88)',
                 }}>
                 {arjunSpeech}
               </motion.p>
             ) : (
               <motion.p key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.32)', fontStyle: 'italic' }}>
+                style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.32)', fontStyle: 'italic', lineHeight: 1.4 }}>
                 {addedIngredients.length === 0
-                  ? 'Waiting for you to start...'
-                  : `${remedy.correctSet.length - addedIngredients.length} more ingredient${remedy.correctSet.length - addedIngredients.length !== 1 ? 's' : ''} needed`}
+                  ? 'Pick an ingredient and watch me react!'
+                  : `${remedy.correctSet.length - addedIngredients.length} more ingredient${remedy.correctSet.length - addedIngredients.length !== 1 ? 's' : ''} needed…`}
               </motion.p>
             )}
           </AnimatePresence>
+          {wrongCount > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+              <span style={{ fontSize: '0.78rem', color: 'rgba(255,120,100,0.65)' }}>Wrong picks:</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#FF8A65' }}>{wrongCount}x</span>
+            </div>
+          )}
         </div>
-        {/* Wrong count badge */}
-        {wrongCount > 0 && (
-          <div style={{ flexShrink: 0, textAlign: 'center' }}>
-            <p style={{ fontSize: '0.6rem', color: 'rgba(255,100,100,0.6)' }}>wrong</p>
-            <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255,100,100,0.8)' }}>{wrongCount}x</p>
-          </div>
-        )}
       </motion.div>
 
       {/* Main layout: bowl left, shelf right */}

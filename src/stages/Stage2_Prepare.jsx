@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameState } from '../hooks/useGameState'
 import { ACTIONS } from '../context/GameContext'
-import { getRemedyByDay, getAllIngredients } from '../data/remedies'
+import { getRemedyByDay, getAllIngredients, getWrongPickFeedback, PROPERTY_LABELS } from '../data/remedies'
 
 // Science descriptions per day for microscope phase
 const MICRO_TEXT = {
@@ -434,7 +434,13 @@ export default function Stage2_Prepare() {
   const [addedIngredients, setAddedIngredients] = useState([])
   const [wrongItem, setWrongItem] = useState(null)
   const [wrongMsg, setWrongMsg] = useState('')
-  const [phase, setPhase] = useState('select') // select → crush? → stir → heat → microscope → done
+  const [wrongEffect, setWrongEffect] = useState('neutral') // 'worse' | 'neutral'
+  const [discoveredProps, setDiscoveredProps] = useState({}) // id → properties[] revealed after wrong pick
+  const [wrongCount, setWrongCount] = useState(0)
+  const [arjunMood, setArjunMood] = useState('neutral')
+  const [arjunSpeech, setArjunSpeech] = useState('')
+  const [shake, setShake] = useState(false)
+  const [phase, setPhase] = useState('select')
   const [bowlItems, setBowlItems] = useState([])
   const [stirProgress, setStirProgress] = useState(0)
   const [temperature, setTemperature] = useState(25)
@@ -453,7 +459,32 @@ export default function Stage2_Prepare() {
     return remedy.correctSet.every(id => addedIngredients.includes(id))
   }, [addedIngredients, remedy])
 
-  // Handle ingredient tap
+  // ── Arjun dialogue banks ──
+  const correctSpeeches = [
+    'Ooh yes! Grandma uses that! 🌟',
+    'That smells healing! ✨',
+    'Yes! I can feel it already! 💪',
+    'Perfect choice! My throat feels better! 🎉',
+    'Ancient wisdom at work! 🔬',
+  ]
+  const wrongSpeeches = [
+    'Ugh... that made it worse! 🤧',
+    'Wait wait wait — not right! 😖',
+    'Eww! That burns more! 🥵',
+    'Hmm... my tummy hurts now 😬',
+    'No no! That tickles my throat! 😂',
+  ]
+
+  function triggerArjunSpeech(mood, speeches) {
+    const msg = speeches[Math.floor(Math.random() * speeches.length)]
+    setArjunMood(mood)
+    setArjunSpeech(msg)
+    setTimeout(() => { setArjunMood('neutral'); setArjunSpeech('') }, 2500)
+  }
+
+  // Handle ingredient tap — DISCOVERY SYSTEM
+  // Player gets NO upfront hint. They tap and observe Arjun's reaction.
+  // Wrong picks reveal the ingredient's properties (educational mismatch feedback).
   function handleIngredientTap(item) {
     if (isAdded(item.id) || phase !== 'select') return
     const isCorrect = remedy.correctSet.includes(item.id)
@@ -461,11 +492,28 @@ export default function Stage2_Prepare() {
     if (isCorrect) {
       setAddedIngredients(prev => [...prev, item.id])
       setBowlItems(prev => [...prev, { id: item.id, emoji: item.emoji, color: item.color }])
+      const remaining = remedy.correctSet.length - addedIngredients.length - 1
+      if (remaining === 0) {
+        setArjunMood('excited'); setArjunSpeech('YES! Perfect mix! 🏆')
+        setTimeout(() => { setArjunMood('neutral'); setArjunSpeech('') }, 3000)
+      } else {
+        triggerArjunSpeech('happy', correctSpeeches)
+      }
     } else {
-      // Wrong — show bounce animation in bowl
+      // Wrong pick — reveal the ingredient's hidden properties as clue
+      const feedback = getWrongPickFeedback(item, remedy)
       setWrongItem(item)
-      setWrongMsg(`That ingredient didn't mix well! Try another 💡`)
-      setTimeout(() => { setWrongItem(null); setWrongMsg('') }, 2000)
+      setWrongEffect(feedback.effect)
+      setWrongCount(c => c + 1)
+      setShake(feedback.effect === 'worse')
+      setTimeout(() => setShake(false), 500)
+      // Reveal this ingredient's properties so player can learn from it
+      setDiscoveredProps(prev => ({ ...prev, [item.id]: item.properties || [] }))
+      // Arjun mood based on effect type
+      const mood = feedback.effect === 'worse' ? 'wrong' : 'yuck'
+      triggerArjunSpeech(mood, wrongSpeeches)
+      setWrongMsg(feedback.msg)
+      setTimeout(() => { setWrongItem(null); setWrongMsg('') }, 3000)
     }
   }
 
@@ -475,6 +523,11 @@ export default function Stage2_Prepare() {
     setBowlItems([])
     setWrongItem(null)
     setWrongMsg('')
+    setWrongEffect('neutral')
+    setWrongCount(0)
+    setArjunMood('neutral')
+    setArjunSpeech('')
+    // Keep discoveredProps so player retains knowledge of wrong picks!
   }
 
   // Watch for completion → crush (Days 4-7) or stir (Days 1-3)
@@ -1270,11 +1323,18 @@ export default function Stage2_Prepare() {
   }
 
   // ═══ SELECT PHASE — Bowl (left) + Shelf (right) ═══
+  // Arjun face mood map
+  const moodFace = { neutral: '😐', happy: '😄', wrong: '🤧', yuck: '🤢', ouch: '😖', excited: '🤩' }
+  const moodColor = { neutral: 'rgba(255,255,255,0.12)', happy: 'rgba(0,200,83,0.25)', wrong: 'rgba(255,80,80,0.25)', yuck: 'rgba(200,100,0,0.25)', ouch: 'rgba(255,80,80,0.3)', excited: 'rgba(255,215,0,0.3)' }
+
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      minHeight: '100dvh', padding: '72px 16px 100px', gap: '16px',
-    }}>
+    <motion.div
+      animate={shake ? { x: [-8, 8, -6, 6, -3, 3, 0] } : { x: 0 }}
+      transition={{ duration: 0.4 }}
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        minHeight: '100dvh', padding: '72px 16px 100px', gap: '14px',
+      }}>
       {/* Title */}
       <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
         className="font-heading"
@@ -1282,8 +1342,53 @@ export default function Stage2_Prepare() {
         {remedy.icon} Prepare {remedy.name}
       </motion.h2>
       <p className="game-text" style={{ color: 'var(--color-text-secondary)', textAlign: 'center', fontSize: '0.9rem' }}>
-        Try adding ingredients — see what works! ({addedIngredients.length}/{remedy.correctSet.length})
+        What should go in? Experiment and observe Arjun's reaction! ({addedIngredients.length}/{remedy.correctSet.length})
       </p>
+
+      {/* ── Arjun Character Panel ── */}
+      <motion.div
+        animate={{ background: moodColor[arjunMood] }}
+        transition={{ duration: 0.3 }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '12px',
+          padding: '10px 16px', borderRadius: '20px',
+          border: `1px solid ${arjunMood === 'wrong' ? 'rgba(255,80,80,0.3)' : arjunMood === 'happy' || arjunMood === 'excited' ? 'rgba(0,200,83,0.3)' : 'rgba(255,255,255,0.1)'}`,
+          maxWidth: '340px', width: '100%', minHeight: '60px',
+        }}>
+        {/* Face */}
+        <motion.div
+          key={arjunMood}
+          animate={arjunMood === 'wrong' ? { rotate: [-5, 5, -4, 4, 0], scale: [1, 1.2, 1] } : arjunMood === 'happy' || arjunMood === 'excited' ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+          transition={{ duration: 0.4 }}
+          style={{ fontSize: '2rem', flexShrink: 0 }}>
+          {moodFace[arjunMood]}
+        </motion.div>
+        {/* Speech bubble */}
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: '2px' }}>Arjun says:</p>
+          <AnimatePresence mode="wait">
+            {arjunSpeech ? (
+              <motion.p key={arjunSpeech}
+                initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                style={{ fontSize: '0.85rem', fontWeight: 600, color: arjunMood === 'wrong' ? '#FF8A65' : arjunMood === 'happy' || arjunMood === 'excited' ? '#69F0AE' : 'rgba(255,255,255,0.7)', lineHeight: 1.3 }}>
+                {arjunSpeech}
+              </motion.p>
+            ) : (
+              <motion.p key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)', fontStyle: 'italic' }}>
+                {addedIngredients.length === 0 ? 'Waiting for you to start...' : `${remedy.correctSet.length - addedIngredients.length} more ingredient${remedy.correctSet.length - addedIngredients.length !== 1 ? 's' : ''} needed`}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+        {/* Wrong count indicator */}
+        {wrongCount > 0 && (
+          <div style={{ flexShrink: 0, textAlign: 'center' }}>
+            <p style={{ fontSize: '0.6rem', color: 'rgba(255,100,100,0.6)' }}>wrong</p>
+            <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255,100,100,0.8)' }}>{wrongCount}x</p>
+          </div>
+        )}
+      </motion.div>
 
       {/* Main layout: bowl left, shelf right */}
       <div style={{
@@ -1363,7 +1468,10 @@ export default function Stage2_Prepare() {
             fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.15em',
             color: 'var(--color-text-secondary)', textTransform: 'uppercase',
           }}>
-            Ingredient Shelf — Tap to Add
+            Experiment — Tap ingredients to test them!
+          </p>
+          <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center', marginTop: '-6px' }}>
+            Wrong picks reveal clues about the ingredient
           </p>
 
           <div style={{
@@ -1372,34 +1480,58 @@ export default function Stage2_Prepare() {
           }}>
             {allItems.map(item => {
               const added = isAdded(item.id)
+              const revealedProps = discoveredProps[item.id] // shown after wrong pick
+              const isWrong = !!revealedProps && !added
               return (
                 <motion.button key={item.id}
                   onClick={() => handleIngredientTap(item)} disabled={added}
-                  whileHover={!added ? { scale: 1.06, y: -2 } : {}}
+                  whileHover={!added && !isWrong ? { scale: 1.06, y: -2 } : !added ? { scale: 1.03 } : {}}
                   whileTap={!added ? { scale: 0.94 } : {}}
+                  animate={wrongItem?.id === item.id ? { x: [-6, 6, -4, 4, 0] } : {}}
+                  transition={{ duration: 0.3 }}
                   style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-                    padding: '12px 8px', borderRadius: '12px',
-                    background: added ? 'rgba(0,200,83,0.1)' : 'rgba(255,255,255,0.06)',
-                    border: `2px solid ${added ? 'rgba(0,200,83,0.3)' : 'rgba(255,255,255,0.1)'}`,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                    padding: isWrong ? '8px 6px' : '12px 8px', borderRadius: '12px',
+                    background: added ? 'rgba(0,200,83,0.1)' : isWrong ? 'rgba(255,80,80,0.08)' : 'rgba(255,255,255,0.06)',
+                    border: `2px solid ${added ? 'rgba(0,200,83,0.3)' : isWrong ? 'rgba(255,80,80,0.3)' : 'rgba(255,255,255,0.1)'}`,
                     cursor: added ? 'default' : 'pointer',
                     opacity: added ? 0.4 : 1,
                     transition: 'all 0.2s',
+                    position: 'relative',
                   }}>
+                  {/* Wrong badge */}
+                  {isWrong && (
+                    <span style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.6rem' }}>❌</span>
+                  )}
+                  {/* Added badge */}
+                  {added && (
+                    <span style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.6rem' }}>✅</span>
+                  )}
                   <div style={{
-                    width: '44px', height: '44px', borderRadius: '50%',
-                    background: `${item.color}22`, border: `2px solid ${item.color}44`,
+                    width: '40px', height: '40px', borderRadius: '50%',
+                    background: `${item.color}22`, border: `2px solid ${item.color}${isWrong ? '66' : '44'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.4rem',
+                    fontSize: '1.3rem',
+                    filter: isWrong ? 'grayscale(0.5)' : 'none',
                   }}>
                     {item.emoji}
                   </div>
                   <span style={{
-                    fontSize: '0.65rem', color: 'var(--color-text-secondary)',
+                    fontSize: '0.62rem', color: isWrong ? 'rgba(255,120,100,0.8)' : 'var(--color-text-secondary)',
                     fontWeight: 600, textAlign: 'center', lineHeight: 1.2,
                   }}>
                     {item.name}
                   </span>
+                  {/* Revealed properties after wrong pick */}
+                  {isWrong && revealedProps.slice(0, 2).map(prop => (
+                    <span key={prop} style={{
+                      fontSize: '0.5rem', color: 'rgba(255,160,100,0.8)',
+                      background: 'rgba(255,80,80,0.1)', borderRadius: '4px',
+                      padding: '1px 4px', textAlign: 'center', lineHeight: 1.4,
+                    }}>
+                      {PROPERTY_LABELS[prop] || prop}
+                    </span>
+                  ))}
                 </motion.button>
               )
             })}
@@ -1442,6 +1574,6 @@ export default function Stage2_Prepare() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   )
 }

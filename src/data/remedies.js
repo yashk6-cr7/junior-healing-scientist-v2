@@ -50,6 +50,21 @@ export const REMEDIES = [
     ],
     correctSet: ['milk', 'haldi', 'black_pepper', 'honey'],
     particleScene: 'HaldiParticles',
+    parmanu: {
+      id: 'curcumin',
+      moleculeName: 'Curcumin',
+      sanskritName: 'कुरकुमिन',
+      sourceIngredient: 'Turmeric (Haldi)',
+      emoji: '🟡',
+      color: '#FFD700',
+      atomicAction: 'Binds to NF-kB receptor and switches off the body\'s germ alarm signal.',
+      kidsExplanation: 'Curcumin is like a tiny golden key that turns off the alarm that makes your body feel sick!',
+      scienceFact: 'Curcumin can cross the blood-brain barrier, making it one of the most powerful natural anti-inflammatories known to science.',
+      // Describes how particles behave in the canvas animation
+      particleRole: 'blocker', // attacks receptor sites on bacteria
+      particleColor: '#FFD700',
+      targetColor: '#FF3D00', // bacteria/enemy color
+    },
   },
   {
     day: 2,
@@ -77,6 +92,20 @@ export const REMEDIES = [
     ],
     correctSet: ['water', 'tulsi_leaves', 'ginger', 'honey'],
     particleScene: 'TulsiParticles',
+    parmanu: {
+      id: 'eugenol',
+      moleculeName: 'Eugenol',
+      sanskritName: 'यूजेनॉल',
+      sourceIngredient: 'Tulsi (Holy Basil)',
+      emoji: '🌿',
+      color: '#00C853',
+      atomicAction: 'Coats the surface of throat cells forming a protective antiviral shield layer.',
+      kidsExplanation: 'Eugenol is like a tiny green shield that wraps around your throat cells so viruses can\'t get in!',
+      scienceFact: 'Eugenol is also found in cloves and has been used in dentistry as a natural anaesthetic for over 100 years.',
+      particleRole: 'shield', // spirals outward coating cells
+      particleColor: '#00E676',
+      targetColor: '#FF6D00',
+    },
   },
   {
     day: 3,
@@ -103,6 +132,20 @@ export const REMEDIES = [
     ],
     correctSet: ['warm_water', 'ginger_juice', 'honey', 'lemon'],
     particleScene: 'GingerParticles',
+    parmanu: {
+      id: 'gingerol',
+      moleculeName: 'Gingerol',
+      sanskritName: 'जिंजरोल',
+      sourceIngredient: 'Ginger (Adrak)',
+      emoji: '🫚',
+      color: '#FF6D00',
+      atomicAction: 'Punctures and dissolves the cell walls of bacteria, neutralising them completely.',
+      kidsExplanation: 'Gingerol is like a tiny drill that pokes holes in the walls of bad bacteria so they fall apart!',
+      scienceFact: 'Gingerol is 6-8x more potent when combined with honey — honey helps it penetrate deeper into bacterial membranes.',
+      particleRole: 'driller', // homes in on bacteria, breaks walls
+      particleColor: '#FF8F00',
+      targetColor: '#C62828',
+    },
   },
   {
     day: 4,
@@ -130,6 +173,20 @@ export const REMEDIES = [
     ],
     correctSet: ['hot_water', 'eucalyptus', 'towel', 'bowl'],
     particleScene: 'SteamParticles',
+    parmanu: {
+      id: 'cineole',
+      moleculeName: '1,8-Cineole',
+      sanskritName: 'सिनेओल',
+      sourceIngredient: 'Eucalyptus Oil',
+      emoji: '💨',
+      color: '#40C4FF',
+      atomicAction: 'Rides steam molecules upward through nasal passages, sweeping mucus and blocking viral entry points.',
+      kidsExplanation: 'Cineole rides on steam like a tiny surfer and clears all the sticky mucus blocking your nose!',
+      scienceFact: 'Cineole is one of the only natural molecules proven to reduce the frequency of cough by up to 36% in clinical trials.',
+      particleRole: 'sweeper', // rises upward like steam
+      particleColor: '#40C4FF',
+      targetColor: '#78909C',
+    },
   },
   {
     day: 5,
@@ -157,6 +214,20 @@ export const REMEDIES = [
     ],
     correctSet: ['vegetable_broth', 'garlic', 'turmeric', 'black_pepper'],
     particleScene: 'SoupParticles',
+    parmanu: {
+      id: 'allicin',
+      moleculeName: 'Allicin',
+      sanskritName: 'एलिसिन',
+      sourceIngredient: 'Garlic (Lahsun)',
+      emoji: '🧄',
+      color: '#FFFDE7',
+      atomicAction: 'Allicin, quercetin, and beta-carotene form a vortex that attacks bacteria from multiple angles simultaneously.',
+      kidsExplanation: 'Allicin is nature\'s own antibiotic — it spins like a vortex and hits bacteria from all sides at once!',
+      scienceFact: 'Allicin is only released when garlic is crushed or chopped — the enzyme alliinase converts alliin into allicin in seconds.',
+      particleRole: 'vortex', // swirls in a triple-helix attack pattern
+      particleColor: '#F9A825',
+      targetColor: '#E53935',
+    },
   },
   {
     day: 6,
@@ -183,6 +254,20 @@ export const REMEDIES = [
     ],
     correctSet: ['black_pepper', 'long_pepper', 'dry_ginger', 'honey'],
     particleScene: 'SpiceParticles',
+    parmanu: {
+      id: 'piperine',
+      moleculeName: 'Piperine',
+      sanskritName: 'पिपेरिन',
+      sourceIngredient: 'Black Pepper (Kali Mirch)',
+      emoji: '⚫',
+      color: '#E040FB',
+      atomicAction: 'Attaches to curcumin molecules, inhibiting intestinal enzymes that would otherwise destroy curcumin before it reaches the blood.',
+      kidsExplanation: 'Piperine is like a bodyguard for curcumin — it holds onto it tight so it doesn\'t get destroyed on its way into your blood!',
+      scienceFact: 'Just 20mg of piperine increases curcumin absorption by 2000% — this is why black pepper and turmeric always appear together in traditional medicine.',
+      particleRole: 'amplifier', // latches onto other particles, makes them glow brighter
+      particleColor: '#CE93D8',
+      targetColor: '#FFD700',
+    },
   },
   {
     day: 7,
@@ -209,6 +294,20 @@ export const REMEDIES = [
     ],
     correctSet: ['water', 'tulsi', 'ginger', 'haldi', 'dalchini', 'black_pepper'],
     particleScene: 'KadhaParticles',
+    parmanu: {
+      id: 'synergy',
+      moleculeName: 'Master Synergy',
+      sanskritName: 'समन्वय',
+      sourceIngredient: 'Kadha (All 6 Ingredients)',
+      emoji: '👑',
+      color: '#FFD700',
+      atomicAction: 'All six healing compounds converge in a chain reaction — each molecule amplifies the next, forming the ultimate healing stream.',
+      kidsExplanation: 'When all 6 molecules join together, they form a golden chain that defeats every type of germ at the same time!',
+      scienceFact: 'Polypharmacy synergy — multiple plant compounds working together — is the founding principle of Ayurvedic formulation (Rasayana).',
+      particleRole: 'convergence', // all previous particle types appear and merge
+      particleColor: '#FFD700',
+      targetColor: '#FF0000',
+    },
   },
 ]
 

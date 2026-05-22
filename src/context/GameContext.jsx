@@ -17,6 +17,7 @@ export const initialState = {
   totalAttempts: 0,       // analytics: total ingredient drop attempts
   failedAttempts: 0,      // analytics: wrong combo attempts
   sessionStartTime: null, // ISO timestamp of current session
+  unlockedParmanus: [],   // list of molecule IDs unlocked (e.g. ['curcumin', 'eugenol'])
 }
 
 // ─── Action Types ─────────────────────────────────────────────────────────────
@@ -34,6 +35,7 @@ export const ACTIONS = {
 
   // Badges
   EARN_BADGE: 'EARN_BADGE',
+  UNLOCK_PARMANU: 'UNLOCK_PARMANU',
 
   // Analytics
   INCREMENT_ATTEMPTS: 'INCREMENT_ATTEMPTS',
@@ -103,11 +105,17 @@ function gameReducer(state, action) {
       return { ...state, completedDays, healingProgress, patientHealth }
     }
 
-    // ── Badges ──
+    // ── Badges & Parmanus ──
     case ACTIONS.EARN_BADGE: {
       const badgeId = action.payload
       if (state.earnedBadges.includes(badgeId)) return state
       return { ...state, earnedBadges: [...state.earnedBadges, badgeId] }
+    }
+    
+    case ACTIONS.UNLOCK_PARMANU: {
+      const parmanuId = action.payload
+      if (state.unlockedParmanus?.includes(parmanuId)) return state
+      return { ...state, unlockedParmanus: [...(state.unlockedParmanus || []), parmanuId] }
     }
 
     // ── Analytics ──

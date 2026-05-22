@@ -3,6 +3,7 @@
  * Routes between Stage 1 (Diagnose), Stage 2 (Prepare), Stage 3 (Heal).
  * Manages top-level layout with animated gradient background.
  */
+import React, { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useGameState } from './hooks/useGameState'
 import Stage1_Diagnose from './stages/Stage1_Diagnose'
@@ -11,6 +12,7 @@ import Stage3_Heal from './stages/Stage3_Heal'
 import SoundManager from './components/SoundManager'
 import ProgressBar from './components/ProgressBar'
 import HealerJournal from './components/HealerJournal'
+import ParmanuAlbum from './components/ParmanuAlbum'
 
 const stageComponents = {
   1: Stage1_Diagnose,
@@ -29,6 +31,29 @@ function App() {
   const { state } = useGameState()
   const StageComponent = stageComponents[state.currentStage] || Stage1_Diagnose
 
+  // ── Parmanu Album state ──
+  // albumOpen: whether the album modal is visible
+  // highlightId: the molecule ID to spotlight (set after a new unlock)
+  const [albumOpen, setAlbumOpen] = React.useState(false)
+  const [highlightId, setHighlightId] = React.useState(null)
+
+  // Listen for new unlocks and auto-open album on first unlock
+  const prevUnlockedCountRef = React.useRef(0)
+  React.useEffect(() => {
+    const count = (state.unlockedParmanus || []).length
+    if (count > prevUnlockedCountRef.current) {
+      // Something was just unlocked — open the album and spotlight it
+      const newest = (state.unlockedParmanus || []).slice(-1)[0]
+      setHighlightId(newest)
+      setAlbumOpen(true)
+      // After 3 seconds remove the spotlight
+      const timer = setTimeout(() => setHighlightId(null), 3000)
+      prevUnlockedCountRef.current = count
+      return () => clearTimeout(timer)
+    }
+    prevUnlockedCountRef.current = count
+  }, [state.unlockedParmanus])
+
   return (
     <div className="bg-animated" style={{ minHeight: '100dvh', position: 'relative' }}>
       {/* Sound toggle */}
@@ -36,6 +61,43 @@ function App() {
 
       {/* Healer's Journal */}
       <HealerJournal currentDay={state.currentDay} />
+
+      {/* ── Parmanu Album Button ── */}
+      {/* Sits top-right corner, opposite the journal */}
+      <motion.button
+        id="parmanu-album-btn"
+        onClick={() => setAlbumOpen(true)}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.92 }}
+        animate={{
+          boxShadow: (state.unlockedParmanus || []).length > 0
+            ? ['0 0 0px rgba(255,215,0,0)', '0 0 16px rgba(255,215,0,0.5)', '0 0 0px rgba(255,215,0,0)']
+            : 'none',
+        }}
+        transition={{ repeat: Infinity, duration: 2.5 }}
+        title="Open Parmanu Collection"
+        style={{
+          position: 'fixed',
+          top: '16px',
+          right: '16px',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '8px 14px',
+          borderRadius: 'var(--radius-full, 999px)',
+          background: 'rgba(27, 40, 56, 0.85)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255,215,0,0.2)',
+          cursor: 'pointer',
+          fontSize: '0.82rem',
+          color: '#FFD700',
+          fontWeight: 600,
+        }}
+      >
+        <span>⚛️</span>
+        <span>{(state.unlockedParmanus || []).length}/7</span>
+      </motion.button>
 
       {/* Day indicator */}
       <div style={{
@@ -86,6 +148,13 @@ function App() {
           label="Healing Progress"
         />
       </div>
+      {/* ── Parmanu Album Modal ── */}
+      <ParmanuAlbum
+        isOpen={albumOpen}
+        onClose={() => setAlbumOpen(false)}
+        unlockedIds={state.unlockedParmanus || []}
+        highlightId={highlightId}
+      />
     </div>
   )
 }

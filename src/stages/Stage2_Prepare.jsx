@@ -1,14 +1,21 @@
 /**
- * Stage2_Prepare.jsx — Remedy Preparation (matches PixiJS layout)
- * Layout: Bowl (left) + Ingredient Shelf (right)
- * Phases: select → microscope → done
+ * Stage2_Prepare.jsx — Remedy Preparation with Daily Minigames
+ * Each day loads a unique minigame mechanic for ingredient selection.
+ * Phases: select (minigame) → (crush?) → stir → heat → microscope → Stage 3
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameState } from '../hooks/useGameState'
 import { ACTIONS } from '../context/GameContext'
 import { getRemedyByDay, getAllIngredients, getWrongPickFeedback, PROPERTY_LABELS } from '../data/remedies'
-
+import { Day1_Alchemy } from '../minigames/Day1_Alchemy'
+import { Day2_Experiment } from '../minigames/Day2_Experiment'
+import { Day3_Memory } from '../minigames/Day3_Memory'
+import { Day4_SpeedCatch } from '../minigames/Day4_SpeedCatch'
+import { Day5_Dosage } from '../minigames/Day5_Dosage'
+import { Day6_CardMatch } from '../minigames/Day6_CardMatch'
+import { Day7_GrandLab } from '../minigames/Day7_GrandLab'
+import MolecularCinematics from '../components/animations/MolecularCinematics'
 // Science descriptions per day for microscope phase
 const MICRO_TEXT = {
   1: 'Watch Curcumin (gold) spread through the milk molecules, blocking the NF-kB germ alarm! ⚡',
@@ -579,14 +586,6 @@ export default function Stage2_Prepare() {
   }, [state.currentDay])
 
   const [addedIngredients, setAddedIngredients] = useState([])
-  const [wrongItem, setWrongItem] = useState(null)
-  const [wrongMsg, setWrongMsg] = useState('')
-  const [wrongEffect, setWrongEffect] = useState('neutral') // 'worse' | 'neutral'
-  const [discoveredProps, setDiscoveredProps] = useState({}) // id → properties[] revealed after wrong pick
-  const [wrongCount, setWrongCount] = useState(0)
-  const [arjunMood, setArjunMood] = useState('neutral')
-  const [arjunSpeech, setArjunSpeech] = useState('')
-  const [shake, setShake] = useState(false)
   const [phase, setPhase] = useState('select')
   const [bowlItems, setBowlItems] = useState([])
   const [stirProgress, setStirProgress] = useState(0)
@@ -599,83 +598,20 @@ export default function Stage2_Prepare() {
   const isDay7 = state.currentDay >= 7
   const needsCrush = state.currentDay >= 4
 
-  const isAdded = useCallback((id) => addedIngredients.includes(id), [addedIngredients])
-
+  // Handle completion from any minigame
+  const handleMinigameComplete = useCallback((selectedIds) => {
+    setAddedIngredients(selectedIds)
+    const items = allItems.filter(i => selectedIds.includes(i.id))
+    setBowlItems(items)
+    
+    setTimeout(() => {
+      setPhase(needsCrush ? 'crush' : 'stir')
+    }, 1500)
+  }, [allItems, needsCrush])
   const isComplete = useMemo(() => {
     if (!remedy) return false
     return remedy.correctSet.every(id => addedIngredients.includes(id))
   }, [addedIngredients, remedy])
-
-  // ── Arjun dialogue banks ──
-  const correctSpeeches = [
-    'Ooh yes! Grandma uses that! 🌟',
-    'That smells healing! ✨',
-    'Yes! I can feel it already! 💪',
-    'Perfect choice! My throat feels better! 🎉',
-    'Ancient wisdom at work! 🔬',
-  ]
-  const wrongSpeeches = [
-    'Ugh... that made it worse! 🤧',
-    'Wait wait wait — not right! 😖',
-    'Eww! That burns more! 🥵',
-    'Hmm... my tummy hurts now 😬',
-    'No no! That tickles my throat! 😂',
-  ]
-
-  function triggerArjunSpeech(mood, speeches) {
-    const msg = speeches[Math.floor(Math.random() * speeches.length)]
-    setArjunMood(mood)
-    setArjunSpeech(msg)
-    setTimeout(() => { setArjunMood('neutral'); setArjunSpeech('') }, 2500)
-  }
-
-  // Handle ingredient tap — DISCOVERY SYSTEM
-  // Player gets NO upfront hint. They tap and observe Arjun's reaction.
-  // Wrong picks reveal the ingredient's properties (educational mismatch feedback).
-  function handleIngredientTap(item) {
-    if (isAdded(item.id) || phase !== 'select') return
-    const isCorrect = remedy.correctSet.includes(item.id)
-
-    if (isCorrect) {
-      setAddedIngredients(prev => [...prev, item.id])
-      setBowlItems(prev => [...prev, { id: item.id, emoji: item.emoji, color: item.color }])
-      const remaining = remedy.correctSet.length - addedIngredients.length - 1
-      if (remaining === 0) {
-        setArjunMood('excited'); setArjunSpeech('YES! Perfect mix! 🏆')
-        setTimeout(() => { setArjunMood('neutral'); setArjunSpeech('') }, 3000)
-      } else {
-        triggerArjunSpeech('happy', correctSpeeches)
-      }
-    } else {
-      // Wrong pick — reveal the ingredient's hidden properties as clue
-      const feedback = getWrongPickFeedback(item, remedy)
-      setWrongItem(item)
-      setWrongEffect(feedback.effect)
-      setWrongCount(c => c + 1)
-      setShake(feedback.effect === 'worse')
-      setTimeout(() => setShake(false), 500)
-      // Reveal this ingredient's properties so player can learn from it
-      setDiscoveredProps(prev => ({ ...prev, [item.id]: item.properties || [] }))
-      // Arjun mood based on effect type
-      const mood = feedback.effect === 'worse' ? 'wrong' : 'yuck'
-      triggerArjunSpeech(mood, wrongSpeeches)
-      setWrongMsg(feedback.msg)
-      setTimeout(() => { setWrongItem(null); setWrongMsg('') }, 3000)
-    }
-  }
-
-  // Reset bowl
-  function handleReset() {
-    setAddedIngredients([])
-    setBowlItems([])
-    setWrongItem(null)
-    setWrongMsg('')
-    setWrongEffect('neutral')
-    setWrongCount(0)
-    setArjunMood('neutral')
-    setArjunSpeech('')
-    // Keep discoveredProps so player retains knowledge of wrong picks!
-  }
 
   // Watch for completion → crush (Days 4-7) or stir (Days 1-3)
   useEffect(() => {
@@ -727,17 +663,18 @@ export default function Stage2_Prepare() {
   const TOTAL_BACTERIA = 12
 
   useEffect(() => {
-    if (phase !== 'microscope' || !canvasRef.current) return
+    if (phase !== 'microscope' || !canvasRef.current || !remedy?.parmanu) return
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     const W = canvas.width, H = canvas.height
+    const pInfo = remedy.parmanu
 
-    // Init bacteria (red enemies)
+    // Init enemies
     bacteriaRef.current = Array.from({ length: TOTAL_BACTERIA }, (_, i) => ({
       id: i,
       x: 60 + Math.random() * (W - 120),
       y: 60 + Math.random() * (H - 120),
-      r: 14 + Math.random() * 8,
+      r: 12 + Math.random() * 8,
       vx: (Math.random() - 0.5) * 0.6,
       vy: (Math.random() - 0.5) * 0.6,
       alive: true,
@@ -745,29 +682,23 @@ export default function Stage2_Prepare() {
       pulse: Math.random() * Math.PI * 2,
     }))
 
-    // Curcumin healing particles (gold — follow pointer cluster)
+    // Init healers (follow pointer)
     curRef.current = Array.from({ length: 60 }, () => ({
       x: W / 2 + (Math.random() - 0.5) * 40,
       y: H / 2 + (Math.random() - 0.5) * 40,
       r: 3 + Math.random() * 3,
-      ox: (Math.random() - 0.5) * 30, // orbit offset from pointer
-      oy: (Math.random() - 0.5) * 30,
+      ox: (Math.random() - 0.5) * 35, // orbit offset from pointer
+      oy: (Math.random() - 0.5) * 35,
       glow: 0.6 + Math.random() * 0.4,
-    }))
-
-    // Milk drift particles
-    const milks = Array.from({ length: 80 }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      r: 1.5 + Math.random() * 2,
-      vx: (Math.random() - 0.5) * 0.25,
-      vy: (Math.random() - 0.5) * 0.25,
-      alpha: 0.2 + Math.random() * 0.35,
+      color: pInfo.particleRole === 'convergence' 
+        ? ['#FFD700','#00E676','#FF8F00','#40C4FF','#F9A825','#CE93D8'][Math.floor(Math.random()*6)]
+        : pInfo.particleColor
     }))
 
     let frame = 0
     let killed = 0
 
-    // Pointer event handlers on canvas
+    // Pointer event handlers
     const handleMove = (e) => {
       const rect = canvas.getBoundingClientRect()
       const scaleX = W / rect.width, scaleY = H / rect.height
@@ -783,35 +714,24 @@ export default function Stage2_Prepare() {
 
     function draw() {
       frame++
-      ctx.fillStyle = '#0a0f1a'
+      ctx.fillStyle = '#070d1a'
       ctx.fillRect(0, 0, W, H)
 
       // Vignette
-      const vig = ctx.createRadialGradient(W/2, H/2, W*0.2, W/2, H/2, W*0.72)
+      const vig = ctx.createRadialGradient(W/2, H/2, W*0.2, W/2, H/2, W*0.75)
       vig.addColorStop(0, 'rgba(0,0,0,0)')
-      vig.addColorStop(1, 'rgba(0,0,0,0.5)')
+      vig.addColorStop(1, 'rgba(0,0,0,0.6)')
       ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H)
 
-      // Milk molecules
-      milks.forEach(m => {
-        m.x += m.vx + Math.sin(frame * 0.01 + m.y * 0.01) * 0.08
-        m.y += m.vy + Math.cos(frame * 0.01 + m.x * 0.01) * 0.08
-        if (m.x < 0) m.x = W; if (m.x > W) m.x = 0
-        if (m.y < 0) m.y = H; if (m.y > H) m.y = 0
-        ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(220,220,230,${m.alpha})`; ctx.fill()
-      })
-
-      // Bacteria
+      // Enemies
       bacteriaRef.current.forEach(b => {
         if (!b.alive) {
-          // Death flash
           b.deathAlpha -= 0.05
           if (b.deathAlpha > 0) {
             ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 2, 0, Math.PI * 2)
-            ctx.fillStyle = `rgba(255,100,0,${b.deathAlpha * 0.5})`; ctx.fill()
+            ctx.fillStyle = `${pInfo.targetColor}${Math.floor(b.deathAlpha * 128).toString(16).padStart(2,'0')}`; ctx.fill()
             ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 0.5, 0, Math.PI * 2)
-            ctx.fillStyle = `rgba(255,255,100,${b.deathAlpha})`; ctx.fill()
+            ctx.fillStyle = `rgba(255,255,255,${b.deathAlpha})`; ctx.fill()
           }
           return
         }
@@ -820,43 +740,41 @@ export default function Stage2_Prepare() {
         if (b.x < b.r || b.x > W - b.r) b.vx *= -1
         if (b.y < b.r || b.y > H - b.r) b.vy *= -1
 
-        const pulseR = b.r + Math.sin(b.pulse) * 2
-        // Bacteria glow
-        const bg = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, pulseR * 3)
-        bg.addColorStop(0, 'rgba(220,50,50,0.5)')
-        bg.addColorStop(1, 'rgba(220,50,50,0)')
-        ctx.beginPath(); ctx.arc(b.x, b.y, pulseR * 3, 0, Math.PI * 2)
+        const pulseR = b.r + Math.sin(b.pulse) * 1.5
+        const bg = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, pulseR * 2.5)
+        bg.addColorStop(0, `${pInfo.targetColor}88`)
+        bg.addColorStop(1, `${pInfo.targetColor}00`)
+        ctx.beginPath(); ctx.arc(b.x, b.y, pulseR * 2.5, 0, Math.PI * 2)
         ctx.fillStyle = bg; ctx.fill()
-        // Body
+        
         ctx.beginPath(); ctx.arc(b.x, b.y, pulseR, 0, Math.PI * 2)
-        ctx.fillStyle = '#C62828'; ctx.fill()
-        ctx.strokeStyle = '#EF9A9A'; ctx.lineWidth = 1.5; ctx.stroke()
-        // Flagella
-        ctx.beginPath()
-        ctx.moveTo(b.x + pulseR, b.y)
-        ctx.bezierCurveTo(b.x + pulseR + 12, b.y - 6 + Math.sin(frame * 0.08 + b.id) * 4,
-          b.x + pulseR + 18, b.y + 4, b.x + pulseR + 22, b.y + Math.sin(frame * 0.06) * 3)
-        ctx.strokeStyle = 'rgba(239,154,154,0.5)'; ctx.lineWidth = 1.2; ctx.stroke()
+        ctx.fillStyle = pInfo.targetColor; ctx.fill()
+        
+        ctx.fillStyle = 'rgba(255,255,255,0.7)'
+        ctx.font = `bold ${Math.floor(pulseR)}px sans-serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('🦠', b.x, b.y)
       })
 
-      // Curcumin cluster — follows pointer
+      // Healer particles
       const { x: px, y: py, active } = pointerRef.current
       curRef.current.forEach(c => {
-        const tx = active ? px + c.ox : W / 2 + c.ox + Math.cos(frame * 0.01 + c.oy) * 20
-        const ty = active ? py + c.oy : H / 2 + c.oy + Math.sin(frame * 0.01 + c.ox) * 20
-        c.x += (tx - c.x) * 0.12
-        c.y += (ty - c.y) * 0.12
-        c.glow = 0.5 + Math.sin(frame * 0.04 + c.ox) * 0.3
+        const tx = active ? px + c.ox : W / 2 + c.ox + Math.cos(frame * 0.01 + c.oy) * 30
+        const ty = active ? py + c.oy : H / 2 + c.oy + Math.sin(frame * 0.01 + c.ox) * 30
+        c.x += (tx - c.x) * 0.1
+        c.y += (ty - c.y) * 0.1
+        c.glow = 0.5 + Math.sin(frame * 0.04 + c.ox) * 0.4
 
-        const cg = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r * 5)
-        cg.addColorStop(0, `rgba(255,215,0,${0.8 * c.glow})`)
-        cg.addColorStop(1, 'rgba(255,180,0,0)')
-        ctx.beginPath(); ctx.arc(c.x, c.y, c.r * 5, 0, Math.PI * 2)
+        const cg = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r * 4)
+        cg.addColorStop(0, `${c.color}CC`)
+        cg.addColorStop(1, `${c.color}00`)
+        ctx.beginPath(); ctx.arc(c.x, c.y, c.r * 4, 0, Math.PI * 2)
         ctx.fillStyle = cg; ctx.fill()
         ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255,215,0,0.95)`; ctx.fill()
+        ctx.fillStyle = c.color; ctx.fill()
 
-        // Collision check with bacteria
+        // Collision check
         bacteriaRef.current.forEach(b => {
           if (!b.alive) return
           const dx = c.x - b.x, dy = c.y - b.y
@@ -868,13 +786,12 @@ export default function Stage2_Prepare() {
         })
       })
 
-      // Center instruction if pointer not active yet
-      if (!active && frame < 150) {
-        ctx.fillStyle = `rgba(255,215,0,${0.6 + Math.sin(frame * 0.08) * 0.3})`
+      // Instructions
+      if (!active && frame < 200) {
+        ctx.fillStyle = `${pInfo.particleColor}${Math.floor((0.6 + Math.sin(frame * 0.08) * 0.3) * 255).toString(16).padStart(2,'0')}`
         ctx.font = 'bold 13px sans-serif'
         ctx.textAlign = 'center'
-        ctx.fillText('Move your finger / cursor to guide the gold', W / 2, H - 20)
-        ctx.fillText('healing particles into the red bacteria! 🦠', W / 2, H - 5)
+        ctx.fillText(`Guide ${pInfo.moleculeName} into the germs!`, W / 2, H - 20)
         ctx.textAlign = 'left'
       }
 
@@ -888,7 +805,22 @@ export default function Stage2_Prepare() {
       canvas.removeEventListener('mouseleave', handleLeave)
       canvas.removeEventListener('touchend', handleLeave)
     }
-  }, [phase])
+  }, [phase, remedy])
+
+  const allKilled = bacteriaKilled >= TOTAL_BACTERIA
+  useEffect(() => {
+    // Transition to cinematic phase when bacteria are defeated
+    if (allKilled && phase === 'microscope') {
+      setTimeout(() => setPhase('cinematic'), 800)
+    }
+  }, [allKilled, phase])
+
+  // Dispatch unlock action when reaching the parmanu_unlock phase
+  useEffect(() => {
+    if (phase === 'parmanu_unlock' && remedy?.parmanu) {
+      dispatch({ type: ACTIONS.UNLOCK_PARMANU, payload: remedy.parmanu.id })
+    }
+  }, [phase, remedy, dispatch])
 
 
   function handleContinueToHeal() {
@@ -1193,35 +1125,51 @@ export default function Stage2_Prepare() {
   }
 
   // ═══ MICROSCOPE PHASE ═══
-  if (phase === 'microscope') {
-    const allKilled = bacteriaKilled >= TOTAL_BACTERIA
+  if (phase === 'microscope' || phase === 'cinematic' || phase === 'parmanu_unlock') {
+    const isCinematic = phase === 'cinematic'
+    const isUnlocked = phase === 'parmanu_unlock'
+
     return (
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', minHeight: '100dvh', padding: '24px', gap: '12px',
+        background: 'linear-gradient(180deg, rgba(7,13,26,0.8) 0%, rgba(0,0,0,0.95) 100%)',
+        position: 'relative',
       }}>
         <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
           className="font-heading"
-          style={{ color: '#f5c842', fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', textAlign: 'center' }}>
-          🔬 Microscopic Attack!
+          style={{ color: remedy.parmanu.color, fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', textAlign: 'center' }}>
+          {remedy.parmanu.emoji} {remedy.parmanu.moleculeName} at work!
         </motion.h2>
+
+        {/* Action text HUD */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+          style={{
+            background: 'rgba(255,255,255,0.05)', border: `1px solid ${remedy.parmanu.color}44`,
+            padding: '12px 16px', borderRadius: '12px', maxWidth: '600px', width: '100%',
+            textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '4px'
+          }}>
+          <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: 1.4 }}>
+            {remedy.parmanu.kidsExplanation}
+          </p>
+        </motion.div>
 
         {/* Kill counter HUD */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
           style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%', maxWidth: 600 }}>
           <div style={{ display: 'flex', align: 'center', gap: '8px' }}>
             <span style={{ fontSize: '1.1rem' }}>🦠</span>
-            <span style={{ color: '#EF5350', fontWeight: 700, fontSize: '0.9rem' }}>
+            <span style={{ color: remedy.parmanu.targetColor, fontWeight: 700, fontSize: '0.9rem' }}>
               {TOTAL_BACTERIA - bacteriaKilled} remaining
             </span>
           </div>
           <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: 'rgba(255,255,255,0.1)' }}>
             <motion.div
               animate={{ width: `${(bacteriaKilled / TOTAL_BACTERIA) * 100}%` }}
-              style={{ height: '100%', borderRadius: '3px', background: 'linear-gradient(90deg, #FFD700, #00C853)' }}
+              style={{ height: '100%', borderRadius: '3px', background: remedy.parmanu.color }}
             />
           </div>
-          <span style={{ color: '#FFD700', fontWeight: 700, fontSize: '0.9rem' }}>
+          <span style={{ color: remedy.parmanu.color, fontWeight: 700, fontSize: '0.9rem' }}>
             {bacteriaKilled}/{TOTAL_BACTERIA} 💥
           </span>
         </motion.div>
@@ -1232,31 +1180,74 @@ export default function Stage2_Prepare() {
           style={{
             width: '100%', maxWidth: '600px', aspectRatio: '3/2',
             borderRadius: '16px', overflow: 'hidden',
-            border: `2px solid ${allKilled ? '#00C853' : remedy.color}66`,
-            boxShadow: `0 0 40px ${allKilled ? '#00C85333' : remedy.color + '22'}`,
+            border: `2px solid ${allKilled ? remedy.parmanu.color : remedy.parmanu.color + '66'}`,
+            boxShadow: `0 0 40px ${allKilled ? remedy.parmanu.color + '66' : remedy.parmanu.color + '22'}`,
             position: 'relative',
           }}>
-          <canvas ref={canvasRef} width={600} height={400}
-            style={{ width: '100%', height: '100%', display: 'block', cursor: 'crosshair' }} />
-          {/* All killed overlay */}
-          {allKilled && (
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-              style={{
-                position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)',
-              }}>
-              <p style={{ fontSize: '3rem', marginBottom: '8px' }}>🎉</p>
-              <p className="font-heading" style={{ color: '#00C853', fontSize: '1.2rem' }}>All bacteria defeated!</p>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', marginTop: '4px' }}>The remedy worked! 🌟</p>
-            </motion.div>
+          {/* Only render interactive canvas during microscope phase */}
+          {phase === 'microscope' && (
+            <canvas ref={canvasRef} width={600} height={400}
+              style={{ width: '100%', height: '100%', display: 'block', cursor: 'crosshair' }} />
           )}
+          
+          {/* Cinematic Animation Layer */}
+          <AnimatePresence>
+            {isCinematic && (
+              <MolecularCinematics 
+                day={state.currentDay} 
+                onComplete={() => setPhase('parmanu_unlock')} 
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Parmanu Unlocked Overlay */}
+          <AnimatePresence>
+            {isUnlocked && (
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                style={{
+                  position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+                  padding: '24px', textAlign: 'center', zIndex: 100,
+                }}>
+                <motion.div
+                  initial={{ scale: 0.5, y: 20 }} animate={{ scale: 1, y: 0 }}
+                  transition={{ type: 'spring', damping: 12, delay: 0.2 }}
+                  style={{
+                    background: `linear-gradient(145deg, rgba(13,27,42,0.9), rgba(20,10,35,0.95))`,
+                    border: `1.5px solid ${remedy.parmanu.color}`,
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: `0 0 40px ${remedy.parmanu.color}55`,
+                    maxWidth: '400px'
+                  }}
+                >
+                  <p style={{ fontSize: '3rem', margin: '0 0 12px 0', filter: `drop-shadow(0 0 10px ${remedy.parmanu.color})` }}>
+                    {remedy.parmanu.emoji}
+                  </p>
+                  <p style={{ color: remedy.parmanu.color, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '4px' }}>
+                    PARMANU UNLOCKED
+                  </p>
+                  <h3 style={{ margin: '0 0 4px', fontSize: '1.6rem', color: 'white' }}>
+                    {remedy.parmanu.moleculeName}
+                  </h3>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginBottom: '16px', fontStyle: 'italic' }}>
+                    {remedy.parmanu.sanskritName}
+                  </p>
+                  <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', lineHeight: 1.5 }}>
+                    {remedy.parmanu.atomicAction}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.82rem', textAlign: 'center', maxWidth: 400 }}>
-          {allKilled
-            ? '✅ Every last germ has been defeated by your remedy!'
-            : 'Move your cursor or finger over the canvas — guide the golden healing particles into the red bacteria!'}
+          {phase === 'microscope' && `Use your finger to guide the ${remedy.parmanu.moleculeName} molecules into the germs!`}
+          {isCinematic && 'Watch the molecular science unfold...'}
+          {isUnlocked && '🎉 Brilliant science!'}
         </p>
 
         <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -1285,426 +1276,38 @@ export default function Stage2_Prepare() {
     )
   }
 
-  // ═══ DAY 7 MASTER KADHA FINALE ═══
-  if (phase === 'select' && isDay7) {
-    const MASTER_INGREDIENTS = [
-      { id: 'turmeric',   emoji: '🌿', name: 'Turmeric',    color: '#FFD700', day: 1, fact: 'Curcumin — the golden healer' },
-      { id: 'tulsi',      emoji: '🌱', name: 'Tulsi',       color: '#00C853', day: 2, fact: 'Eugenol — the viral shield' },
-      { id: 'ginger',     emoji: '🫚', name: 'Ginger',      color: '#FF8F00', day: 3, fact: 'Gingerol — the bacteria killer' },
-      { id: 'eucalyptus', emoji: '💨', name: 'Eucalyptus',  color: '#40C4FF', day: 4, fact: 'Cineole — opens the airways' },
-      { id: 'garlic',     emoji: '🧄', name: 'Garlic',      color: '#FFFDE7', day: 5, fact: 'Allicin — nature\'s antibiotic' },
-      { id: 'pepper',     emoji: '⚫', name: 'Black Pepper', color: '#78909C', day: 6, fact: 'Piperine — the power amplifier' },
-    ]
-    const allMasterAdded = addedIngredients.length >= MASTER_INGREDIENTS.length
-    const potFill = (addedIngredients.length / MASTER_INGREDIENTS.length) * 100
-
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        minHeight: '100dvh', padding: '64px 16px 100px', gap: '12px',
-      }}>
-        {/* Title */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-          style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '2rem', marginBottom: '4px' }}>👑</p>
-          <h2 className="font-heading" style={{ color: '#FFD700', fontSize: 'clamp(1.3rem, 5vw, 1.8rem)' }}>
-            Master Kadha — Day 7 Finale!
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginTop: '4px' }}>
-            Add ALL 6 remedies you've learned into the pot!
-          </p>
-        </motion.div>
-
-        {/* Big pot with animated boiling */}
-        <div style={{ position: 'relative', width: '200px', height: '200px', flexShrink: 0 }}>
-          {/* Bubbles when boiling */}
-          {addedIngredients.length > 0 && [0,1,2,3].map(i => (
-            <motion.div key={i}
-              animate={{ y: [-0, -40 - i * 15], opacity: [0.6, 0], scale: [0.4, 1.2] }}
-              transition={{ duration: 1.2 + i * 0.3, repeat: Infinity, delay: i * 0.3 }}
-              style={{
-                position: 'absolute',
-                left: `${30 + i * 35}px`,
-                bottom: '80px',
-                width: 12 + i * 4, height: 12 + i * 4,
-                borderRadius: '50%',
-                background: `rgba(255,215,0,0.4)`,
-              }} />
-          ))}
-
-          {/* Pot SVG */}
-          <svg viewBox="0 0 200 200" style={{ width: '100%', height: '100%' }}>
-            {/* Pot handles */}
-            <rect x="15" y="90" width="20" height="14" rx="7" fill="#546E7A" />
-            <rect x="165" y="90" width="20" height="14" rx="7" fill="#546E7A" />
-            {/* Pot body */}
-            <path d="M 35 95 Q 35 185 100 185 Q 165 185 165 95 Z" fill="rgba(40,60,80,0.8)" stroke="#78909C" strokeWidth="3" />
-            {/* Liquid fill — color blends all added ingredients */}
-            {addedIngredients.length > 0 && (
-              <motion.path
-                d={`M 40 ${170 - potFill * 0.7} Q 40 178 100 178 Q 160 178 160 ${170 - potFill * 0.7} Z`}
-                fill={`${remedy.color}66`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              />
-            )}
-            {/* Rim */}
-            <ellipse cx="100" cy="95" rx="65" ry="14" fill="rgba(50,70,90,0.9)" stroke="#90A4AE" strokeWidth="2" />
-            {/* Steam when full */}
-            {allMasterAdded && [0,1].map(i => (
-              <motion.ellipse key={i} cx={80 + i * 40} cy="75"
-                rx="8" ry="18"
-                fill="rgba(255,255,255,0.06)"
-                animate={{ cy: [75, 45, 75], opacity: [0.4, 0, 0.4] }}
-                transition={{ duration: 2, repeat: Infinity, delay: i * 0.7 }} />
-            ))}
-            {/* Ingredient emojis in pot */}
-            {addedIngredients.map((id, i) => {
-              const ing = MASTER_INGREDIENTS.find(m => m.id === id)
-              return (
-                <motion.text key={id}
-                  initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-                  x={55 + (i % 3) * 35} y={135 + Math.floor(i / 3) * 30}
-                  fontSize="22" textAnchor="middle">
-                  {ing?.emoji}
-                </motion.text>
-              )
-            })}
-          </svg>
-        </div>
-
-        {/* Ingredient grid — 6 slots */}
-        <div style={{ width: '100%', maxWidth: 420 }}>
-          <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            Tap each ingredient to add it to the pot
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-            {MASTER_INGREDIENTS.map((ing, i) => {
-              const added = addedIngredients.includes(ing.id)
-              return (
-                <motion.button key={ing.id}
-                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + i * 0.1 }}
-                  onClick={() => !added && setAddedIngredients(prev => [...prev, ing.id])}
-                  whileHover={!added ? { scale: 1.06, y: -3 } : {}}
-                  whileTap={!added ? { scale: 0.94 } : {}}
-                  disabled={added}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
-                    padding: '12px 8px', borderRadius: '14px', cursor: added ? 'default' : 'pointer',
-                    background: added ? `${ing.color}18` : 'rgba(255,255,255,0.05)',
-                    border: `2px solid ${added ? ing.color + '66' : 'rgba(255,255,255,0.1)'}`,
-                    transition: 'all 0.25s',
-                    position: 'relative',
-                  }}>
-                  {/* Day badge */}
-                  <span style={{
-                    position: 'absolute', top: 4, right: 6,
-                    fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', fontWeight: 700,
-                  }}>Day {ing.day}</span>
-                  <span style={{ fontSize: '1.6rem', filter: added ? 'none' : 'grayscale(0.3)' }}>{ing.emoji}</span>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: added ? ing.color : 'rgba(255,255,255,0.6)', textAlign: 'center' }}>
-                    {ing.name}
-                  </span>
-                  {added && (
-                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
-                      style={{ fontSize: '0.65rem', color: '#00C853', fontWeight: 700 }}>✓ Added</motion.span>
-                  )}
-                </motion.button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div style={{ width: '100%', maxWidth: 420 }}>
-          <div style={{ width: '100%', height: '6px', borderRadius: '3px', background: 'rgba(255,255,255,0.08)' }}>
-            <motion.div animate={{ width: `${potFill}%` }}
-              style={{ height: '100%', borderRadius: '3px', background: 'linear-gradient(90deg, #FFD700, #FF8F00, #00C853)' }} />
-          </div>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', textAlign: 'center', marginTop: '4px' }}>
-            {addedIngredients.length}/6 ingredients added
-          </p>
-        </div>
-
-        {/* Success overlay — all 6 added */}
-        <AnimatePresence>
-          {allMasterAdded && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              style={{
-                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
-                flexDirection: 'column', gap: '16px',
-              }}>
-              <motion.div initial={{ scale: 0, rotate: -10 }} animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', damping: 10 }}
-                style={{
-                  textAlign: 'center', padding: '36px 28px', borderRadius: '28px',
-                  background: 'linear-gradient(135deg, #0f1a2e, #1a0a2e)',
-                  border: '2px solid rgba(255,215,0,0.4)',
-                  boxShadow: '0 0 80px rgba(255,215,0,0.2)',
-                  maxWidth: '340px', width: '90%',
-                }}>
-                <p style={{ fontSize: '2.8rem', marginBottom: '8px' }}>🏆✨👑</p>
-                <h2 className="font-heading" style={{ color: '#FFD700', fontSize: '1.4rem', marginBottom: '8px' }}>
-                  Master Kadha Ready!
-                </h2>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '20px' }}>
-                  You've combined all 6 healing compounds! Ancient healers called this the "Liquid Gold" of Ayurveda.
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                  {MASTER_INGREDIENTS.map(ing => (
-                    <span key={ing.id} style={{ fontSize: '1.4rem' }}>{ing.emoji}</span>
-                  ))}
-                </div>
-                <button className="btn-primary" onClick={() => setPhase(needsCrush ? 'crush' : 'stir')}
-                  style={{ width: '100%', fontSize: '1rem' }}>
-                  Start the Final Preparation! 🔥
-                </button>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    )
-  }
-
-  // ═══ SELECT PHASE — Bowl (left) + Shelf (right) ═══
-  const moodColor = {
-    neutral: 'rgba(255,255,255,0.07)',
-    happy:   'rgba(0,200,83,0.15)',
-    wrong:   'rgba(255,80,80,0.15)',
-    yuck:    'rgba(200,100,0,0.15)',
-    ouch:    'rgba(255,80,80,0.2)',
-    excited: 'rgba(255,215,0,0.15)',
+  // ═══ ROUTER — Dynamic Minigames per Day ═══
+  function renderMinigame() {
+    switch (remedy.day) {
+      case 1: return <Day1_Alchemy remedy={remedy} onComplete={handleMinigameComplete} />
+      case 2: return <Day2_Experiment remedy={remedy} onComplete={handleMinigameComplete} />
+      case 3: return <Day3_Memory remedy={remedy} onComplete={handleMinigameComplete} />
+      case 4: return <Day4_SpeedCatch remedy={remedy} onComplete={handleMinigameComplete} />
+      case 5: return <Day5_Dosage remedy={remedy} onComplete={handleMinigameComplete} />
+      case 6: return <Day6_CardMatch remedy={remedy} onComplete={handleMinigameComplete} />
+      case 7: return <Day7_GrandLab remedy={remedy} onComplete={handleMinigameComplete} />
+      default: return <Day1_Alchemy remedy={remedy} onComplete={handleMinigameComplete} />
+    }
   }
 
   return (
     <motion.div
-      animate={shake ? { x: [-8, 8, -6, 6, -3, 3, 0] } : { x: 0 }}
-      transition={{ duration: 0.4 }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        minHeight: '100dvh', padding: '72px 16px 100px', gap: '14px',
+        minHeight: '100dvh', padding: '72px 16px 100px', gap: '20px',
       }}>
       {/* Title */}
       <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
         className="font-heading"
-        style={{ color: remedy.color, textAlign: 'center', fontSize: 'clamp(1.2rem, 4vw, 1.6rem)' }}>
+        style={{ color: remedy.color, textAlign: 'center', fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', marginBottom: 8 }}>
         {remedy.icon} Prepare {remedy.name}
       </motion.h2>
-      <p className="game-text" style={{ color: 'var(--color-text-secondary)', textAlign: 'center', fontSize: '0.9rem' }}>
-        What should go in? Experiment and observe Arjun! ({addedIngredients.length}/{remedy.correctSet.length})
-      </p>
 
-      {/* ── Arjun Character Panel ── */}
-      <motion.div
-        animate={{ background: moodColor[arjunMood] }}
-        transition={{ duration: 0.3 }}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '20px',
-          padding: '16px 22px', borderRadius: '24px',
-          border: `2px solid ${
-            arjunMood === 'wrong' ? 'rgba(255,80,80,0.4)' :
-            arjunMood === 'happy' || arjunMood === 'excited' ? 'rgba(0,200,83,0.4)' :
-            'rgba(255,255,255,0.12)'
-          }`,
-          maxWidth: '460px', width: '100%',
-        }}>
-        {/* Full-body Arjun character */}
-        <ArjunFace mood={arjunMood} />
-        {/* Speech area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <p style={{ fontSize: '0.72rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Arjun says:</p>
-          <AnimatePresence mode="wait">
-            {arjunSpeech ? (
-              <motion.p key={arjunSpeech}
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                style={{
-                  fontSize: '1.05rem', fontWeight: 700, lineHeight: 1.45,
-                  color: arjunMood === 'wrong' ? '#FF8A65' : arjunMood === 'happy' || arjunMood === 'excited' ? '#69F0AE' : 'rgba(255,255,255,0.88)',
-                }}>
-                {arjunSpeech}
-              </motion.p>
-            ) : (
-              <motion.p key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.32)', fontStyle: 'italic', lineHeight: 1.4 }}>
-                {addedIngredients.length === 0
-                  ? 'Pick an ingredient and watch me react!'
-                  : `${remedy.correctSet.length - addedIngredients.length} more ingredient${remedy.correctSet.length - addedIngredients.length !== 1 ? 's' : ''} needed…`}
-              </motion.p>
-            )}
-          </AnimatePresence>
-          {wrongCount > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-              <span style={{ fontSize: '0.78rem', color: 'rgba(255,120,100,0.65)' }}>Wrong picks:</span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#FF8A65' }}>{wrongCount}x</span>
-            </div>
-          )}
-        </div>
-      </motion.div>
+      {/* Render the specific minigame for this day */}
+      {renderMinigame()}
 
-      {/* Main layout: bowl left, shelf right */}
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
-        alignItems: 'flex-start', gap: '32px', width: '100%', maxWidth: '800px',
-      }}>
-        {/* ── Bowl ── */}
-        <div style={{ flex: '1 1 280px', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-          <div style={{ position: 'relative', width: '100%', maxWidth: '300px', aspectRatio: '1.2' }}>
-            <svg viewBox="0 0 300 250" style={{ width: '100%', height: '100%' }}>
-              {/* Shadow */}
-              <ellipse cx="150" cy="230" rx="100" ry="15" fill="rgba(0,0,0,0.3)" />
 
-              {/* Bowl body */}
-              <path d="M 40 100 Q 40 220 150 220 Q 260 220 260 100"
-                fill="rgba(40,60,90,0.5)" stroke="#607D8B" strokeWidth="3" />
-
-              {/* Liquid fill */}
-              {bowlItems.length > 0 && (
-                <path d={`M 50 ${180 - bowlItems.length * 15} Q 50 210 150 210 Q 250 210 250 ${180 - bowlItems.length * 15}`}
-                  fill={`${remedy.color}44`} />
-              )}
-
-              {/* Bowl rim */}
-              <ellipse cx="150" cy="100" rx="112" ry="22"
-                fill="rgba(40,55,75,0.6)" stroke="#78909C" strokeWidth="3" />
-
-              {/* Items in bowl */}
-              {bowlItems.map((item, i) => (
-                <motion.text key={item.id}
-                  initial={{ y: -50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  x={100 + (i % 3) * 40} y={140 + Math.floor(i / 3) * 30}
-                  fontSize="24" textAnchor="middle">
-                  {item.emoji}
-                </motion.text>
-              ))}
-
-              {/* Wrong item bounce out */}
-              {wrongItem && (
-                <motion.text
-                  initial={{ x: 150, y: 150, opacity: 1 }}
-                  animate={{ x: 100 + Math.random() * 100, y: 30, opacity: 0, rotate: 360 }}
-                  transition={{ duration: 0.8 }}
-                  fontSize="28" textAnchor="middle">
-                  {wrongItem.emoji}
-                </motion.text>
-              )}
-
-              {/* "drop here" text when empty */}
-              {bowlItems.length === 0 && !wrongItem && (
-                <text x="150" y="165" textAnchor="middle" fill="rgba(255,255,255,0.25)"
-                  fontSize="14" fontFamily="var(--font-body)">
-                  drop here
-                </text>
-              )}
-            </svg>
-          </div>
-
-          {/* Wrong message */}
-          <AnimatePresence>
-            {wrongMsg && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                style={{ textAlign: 'center', maxWidth: '260px' }}>
-                <p className="font-heading" style={{ color: '#FFB74D', fontSize: '1rem', marginBottom: '4px' }}>
-                  Hmm, that doesn't seem right...
-                </p>
-                <p style={{ color: '#FF8A65', fontSize: '0.8rem' }}>{wrongMsg}</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* ── Ingredient Shelf ── */}
-        <div style={{ flex: '1 1 280px', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-          <p style={{
-            fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.15em',
-            color: 'var(--color-text-secondary)', textTransform: 'uppercase',
-          }}>
-            Experiment — Tap ingredients to test them!
-          </p>
-          <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center', marginTop: '-6px' }}>
-            Wrong picks reveal clues about the ingredient
-          </p>
-
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-            gap: '10px', width: '100%',
-          }}>
-            {allItems.map(item => {
-              const added = isAdded(item.id)
-              const revealedProps = discoveredProps[item.id] // shown after wrong pick
-              const isWrong = !!revealedProps && !added
-              return (
-                <motion.button key={item.id}
-                  onClick={() => handleIngredientTap(item)} disabled={added}
-                  whileHover={!added && !isWrong ? { scale: 1.06, y: -2 } : !added ? { scale: 1.03 } : {}}
-                  whileTap={!added ? { scale: 0.94 } : {}}
-                  animate={wrongItem?.id === item.id ? { x: [-6, 6, -4, 4, 0] } : {}}
-                  transition={{ duration: 0.3 }}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                    padding: isWrong ? '8px 6px' : '12px 8px', borderRadius: '12px',
-                    background: added ? 'rgba(0,200,83,0.1)' : isWrong ? 'rgba(255,80,80,0.08)' : 'rgba(255,255,255,0.06)',
-                    border: `2px solid ${added ? 'rgba(0,200,83,0.3)' : isWrong ? 'rgba(255,80,80,0.3)' : 'rgba(255,255,255,0.1)'}`,
-                    cursor: added ? 'default' : 'pointer',
-                    opacity: added ? 0.4 : 1,
-                    transition: 'all 0.2s',
-                    position: 'relative',
-                  }}>
-                  {/* Wrong badge */}
-                  {isWrong && (
-                    <span style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.6rem' }}>❌</span>
-                  )}
-                  {/* Added badge */}
-                  {added && (
-                    <span style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.6rem' }}>✅</span>
-                  )}
-                  <div style={{
-                    width: '40px', height: '40px', borderRadius: '50%',
-                    background: `${item.color}22`, border: `2px solid ${item.color}${isWrong ? '66' : '44'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.3rem',
-                    filter: isWrong ? 'grayscale(0.5)' : 'none',
-                  }}>
-                    {item.emoji}
-                  </div>
-                  <span style={{
-                    fontSize: '0.62rem', color: isWrong ? 'rgba(255,120,100,0.8)' : 'var(--color-text-secondary)',
-                    fontWeight: 600, textAlign: 'center', lineHeight: 1.2,
-                  }}>
-                    {item.name}
-                  </span>
-                  {/* Revealed properties after wrong pick */}
-                  {isWrong && revealedProps.slice(0, 2).map(prop => (
-                    <span key={prop} style={{
-                      fontSize: '0.5rem', color: 'rgba(255,160,100,0.8)',
-                      background: 'rgba(255,80,80,0.1)', borderRadius: '4px',
-                      padding: '1px 4px', textAlign: 'center', lineHeight: 1.4,
-                    }}>
-                      {PROPERTY_LABELS[prop] || prop}
-                    </span>
-                  ))}
-                </motion.button>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Reset Bowl button */}
-      <motion.button
-        onClick={handleReset}
-        whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-        style={{
-          padding: '10px 24px', borderRadius: '24px',
-          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-          color: 'var(--color-text-secondary)', fontSize: '0.85rem', fontWeight: 600,
-          cursor: 'pointer', marginTop: '8px',
-        }}>
-        🗑️ Reset Bowl
-      </motion.button>
 
       {/* Success overlay */}
       <AnimatePresence>

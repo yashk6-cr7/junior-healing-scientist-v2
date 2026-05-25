@@ -1,28 +1,40 @@
 /**
- * Day1_Alchemy.jsx — Ingredient Discovery with v1-style bowl animation
- * Layout: Bowl SVG (left) + Ingredient Shelf (right)
- * Ingredients animate dropping into the bowl. Wrong picks bounce out.
+ * Day1_Alchemy.jsx
+ * EXACT v1 bowl + ingredient drop animation, combined with v2 Arjun reaction panel.
+ * Bowl (left) + Ingredient Shelf (right) layout.
  */
 import { useState, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArjunCharacter } from '../components/ArjunCharacter'
 import { getAllIngredients, getWrongPickFeedback, PROPERTY_LABELS } from '../data/remedies'
 
-const GOOD = ['Ooh yes! That smells healing! ✨', 'Perfect! My nose tingles! 🌟', 'Yes! Grandma uses that! 🙏', 'That one helps! I can feel it! 💪']
-const BAD  = ['Ugh, that made it worse! 🤧', 'Wait — that stings! 😣', 'No no no! Not that one! 😖', 'Eww! My throat burns more! 🥵']
+const GOOD_LINES = [
+  'Ooh yes! That smells healing! ✨',
+  'Perfect! My nose tingles! 🌟',
+  'Yes! Grandma uses that! 🙏',
+  'That one helps! I can feel it! 💪',
+]
+const BAD_LINES = [
+  "Ugh, that made it worse! 🤧",
+  "Wait — that stings! 😣",
+  "No no no! Not that one! 😖",
+  "Eww! My throat burns more! 🥵",
+]
 
 export function Day1_Alchemy({ remedy, onComplete }) {
-  const [added, setAdded]         = useState([])
-  const [discovered, setDisc]     = useState({}) // id → properties[]
-  const [wrongCount, setWC]       = useState(0)
-  const [arjunMood, setMood]      = useState('neutral')
-  const [arjunSpeech, setSpeech]  = useState('')
-  const [shake, setShake]         = useState(false)
-  const [wrongItem, setWrongItem] = useState(null) // item object of the bouncing reject
-  const [bowlItems, setBowlItems] = useState([])   // items confirmed inside the bowl
+  const allItems = useMemo(() => getAllIngredients(remedy.day ?? 1), [remedy])
 
-  const allItems = useMemo(() => getAllIngredients(remedy.day), [remedy.day])
-  const isAdded  = id => added.includes(id)
+  // ── State ──
+  const [addedIngredients, setAddedIngredients] = useState([])
+  const [bowlItems, setBowlItems]               = useState([])
+  const [wrongItem, setWrongItem]               = useState(null)
+  const [wrongMsg, setWrongMsg]                 = useState('')
+  const [arjunMood, setMood]                    = useState('neutral')
+  const [arjunSpeech, setSpeech]               = useState('')
+  const [wrongCount, setWC]                     = useState(0)
+  const [discovered, setDisc]                   = useState({}) // id → properties[]
+
+  const isAdded = id => addedIngredients.includes(id)
 
   const speak = useCallback((mood, lines) => {
     setMood(mood)
@@ -30,13 +42,13 @@ export function Day1_Alchemy({ remedy, onComplete }) {
     setTimeout(() => { setMood('neutral'); setSpeech('') }, 2800)
   }, [])
 
-  function tap(item) {
+  function handleIngredientTap(item) {
     if (isAdded(item.id)) return
-    const correct = remedy.correctSet.includes(item.id)
+    const isCorrect = remedy.correctSet.includes(item.id)
 
-    if (correct) {
-      const next = [...added, item.id]
-      setAdded(next)
+    if (isCorrect) {
+      const next = [...addedIngredients, item.id]
+      setAddedIngredients(next)
       setBowlItems(prev => [...prev, { id: item.id, emoji: item.emoji, color: item.color }])
 
       if (next.length === remedy.correctSet.length) {
@@ -44,189 +56,234 @@ export function Day1_Alchemy({ remedy, onComplete }) {
         setSpeech('YES! Perfect combination! 🏆')
         setTimeout(() => onComplete(next), 2000)
       } else {
-        speak('happy', GOOD)
+        speak('happy', GOOD_LINES)
       }
     } else {
-      const fb = getWrongPickFeedback(item)
+      // Wrong — show bounce animation in bowl (exact v1 behaviour)
       setWrongItem(item)
+      setWrongMsg("That ingredient didn't mix well! Try another 💡")
       setWC(c => c + 1)
       setDisc(prev => ({ ...prev, [item.id]: item.properties || [] }))
-      setShake(fb.effect === 'worse')
-      setTimeout(() => { setShake(false); setWrongItem(null) }, 900)
-      speak(fb.effect === 'worse' ? 'wrong' : 'yuck', BAD)
+      setTimeout(() => { setWrongItem(null); setWrongMsg('') }, 2000)
+      const fb = getWrongPickFeedback(item)
+      speak(fb.effect === 'worse' ? 'wrong' : 'yuck', BAD_LINES)
     }
   }
 
   function handleReset() {
-    setAdded([])
+    setAddedIngredients([])
     setBowlItems([])
-    setDisc({})
-    setWC(0)
+    setWrongItem(null)
+    setWrongMsg('')
     setMood('neutral')
     setSpeech('')
   }
 
   return (
-    <motion.div
-      animate={shake ? { x: [-8, 8, -6, 6, -3, 3, 0] } : {}}
-      transition={{ duration: 0.45 }}
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%' }}>
 
-      {/* Arjun reaction panel */}
+      {/* ── Arjun Reaction Panel (v2) ── */}
       <motion.div
-        animate={{ background: arjunMood === 'wrong' ? 'rgba(255,80,80,0.12)' : (arjunMood === 'happy' || arjunMood === 'excited') ? 'rgba(0,200,83,0.12)' : 'rgba(255,255,255,0.06)' }}
-        style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 18px', borderRadius: 22, border: '2px solid rgba(255,255,255,0.1)', width: '100%', maxWidth: 720 }}>
+        animate={{
+          background: arjunMood === 'wrong'
+            ? 'rgba(255,80,80,0.12)'
+            : (arjunMood === 'happy' || arjunMood === 'excited')
+              ? 'rgba(0,200,83,0.12)'
+              : 'rgba(255,255,255,0.06)',
+        }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 16,
+          padding: '12px 18px', borderRadius: 22,
+          border: '2px solid rgba(255,255,255,0.1)',
+          width: '100%', maxWidth: 720,
+        }}>
         <ArjunCharacter mood={arjunMood} size={0.75} />
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Arjun says:</p>
+          <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
+            Arjun says:
+          </p>
           <AnimatePresence mode="wait">
-            <motion.p key={arjunSpeech || 'idle'}
+            <motion.p
+              key={arjunSpeech || 'idle'}
               initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.4, color: arjunMood === 'wrong' ? '#FF8A65' : (arjunMood === 'happy' || arjunMood === 'excited') ? '#69F0AE' : 'rgba(255,255,255,0.75)' }}>
-              {arjunSpeech || (added.length === 0 ? 'Tap an ingredient — watch my reaction! 🔬' : `${remedy.correctSet.length - added.length} more to go…`)}
+              style={{
+                fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.4,
+                color: arjunMood === 'wrong'
+                  ? '#FF8A65'
+                  : (arjunMood === 'happy' || arjunMood === 'excited')
+                    ? '#69F0AE'
+                    : 'rgba(255,255,255,0.75)',
+              }}>
+              {arjunSpeech || (addedIngredients.length === 0
+                ? 'Tap an ingredient — watch my reaction! 🔬'
+                : `${remedy.correctSet.length - addedIngredients.length} more to go…`)}
             </motion.p>
           </AnimatePresence>
-          {wrongCount > 0 && <p style={{ fontSize: '0.72rem', color: '#FF8A65', marginTop: 4 }}>Wrong picks: {wrongCount}x — use the clue tags!</p>}
+          {wrongCount > 0 && (
+            <p style={{ fontSize: '0.72rem', color: '#FF8A65', marginTop: 4 }}>
+              Wrong picks: {wrongCount}× — use the clue tags!
+            </p>
+          )}
         </div>
       </motion.div>
 
-      {/* Main layout: bowl left, shelf right */}
+      {/* ── Main Layout: Bowl (left) + Shelf (right) — EXACT v1 ── */}
       <div style={{
         display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
-        alignItems: 'flex-start', gap: 28, width: '100%', maxWidth: 760,
+        alignItems: 'flex-start', gap: '32px', width: '100%', maxWidth: '800px',
       }}>
 
-        {/* ── Bowl SVG ── */}
-        <div style={{ flex: '1 1 240px', maxWidth: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <div style={{ position: 'relative', width: '100%', maxWidth: 280, aspectRatio: '1.2' }}>
+        {/* ── Bowl (exact v1) ── */}
+        <div style={{ flex: '1 1 280px', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '300px', aspectRatio: '1.2' }}>
             <svg viewBox="0 0 300 250" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+
               {/* Shadow */}
-              <ellipse cx="150" cy="232" rx="100" ry="12" fill="rgba(0,0,0,0.3)" />
+              <ellipse cx="150" cy="230" rx="100" ry="15" fill="rgba(0,0,0,0.3)" />
 
               {/* Bowl body */}
               <path d="M 40 100 Q 40 220 150 220 Q 260 220 260 100"
-                fill="rgba(40,60,90,0.55)" stroke="#607D8B" strokeWidth="3" />
+                fill="rgba(40,60,90,0.5)" stroke="#607D8B" strokeWidth="3" />
 
-              {/* Liquid fill — rises as items are added */}
-              <AnimatePresence>
-                {bowlItems.length > 0 && (
-                  <motion.path
-                    key="liquid"
-                    initial={{ d: `M 52 212 Q 150 212 248 212 Q 248 212 248 212 Q 150 212 52 212 Z`, opacity: 0 }}
-                    animate={{ 
-                      d: `M 52 ${185 - bowlItems.length * 12} Q 52 212 150 212 Q 248 212 248 ${185 - bowlItems.length * 12} Z`,
-                      opacity: 1 
-                    }}
-                    transition={{ duration: 0.6, type: 'spring', damping: 15 }}
-                    fill={`${remedy.color}55`}
-                  />
-                )}
-              </AnimatePresence>
+              {/* Liquid fill — EXACT v1: static path, re-renders on bowlItems change */}
+              {bowlItems.length > 0 && (
+                <path
+                  d={`M 50 ${180 - bowlItems.length * 15} Q 50 210 150 210 Q 250 210 250 ${180 - bowlItems.length * 15}`}
+                  fill={`${remedy.color}44`}
+                />
+              )}
 
               {/* Bowl rim */}
               <ellipse cx="150" cy="100" rx="112" ry="22"
-                fill="rgba(40,55,75,0.65)" stroke="#78909C" strokeWidth="3" />
+                fill="rgba(40,55,75,0.6)" stroke="#78909C" strokeWidth="3" />
 
-              {/* Correct items inside bowl — drop in from above */}
-              <AnimatePresence>
-                {bowlItems.map((item, i) => (
-                  <motion.g
-                    key={item.id}
-                    initial={{ y: -150, opacity: 0, scale: 0.2 }}
-                    animate={{ y: 0, opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0 }}
-                    transition={{ type: 'spring', damping: 12, stiffness: 150, delay: 0.1 }}
-                  >
-                    <text
-                      x={100 + (i % 3) * 38}
-                      y={148 + Math.floor(i / 3) * 28}
-                      fontSize="22"
-                      textAnchor="middle">
-                      {item.emoji}
-                    </text>
-                  </motion.g>
-                ))}
-              </AnimatePresence>
+              {/* Items in bowl — EXACT v1 motion.text with y offset animation */}
+              {bowlItems.map((item, i) => (
+                <motion.text
+                  key={item.id}
+                  initial={{ y: -50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  x={100 + (i % 3) * 40}
+                  y={140 + Math.floor(i / 3) * 30}
+                  fontSize="24"
+                  textAnchor="middle">
+                  {item.emoji}
+                </motion.text>
+              ))}
 
-              {/* Wrong item — bounces up and out */}
-              <AnimatePresence>
-                {wrongItem && (
-                  <motion.g
-                    key={wrongItem.id + '-bounce'}
-                    initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
-                    animate={{ x: -50 + Math.random() * 100, y: -140, opacity: 0, rotate: 380, scale: 0.3 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.75, ease: 'easeOut' }}
-                  >
-                    <text
-                      x="150"
-                      y="160"
-                      fontSize="28" 
-                      textAnchor="middle">
-                      {wrongItem.emoji}
-                    </text>
-                  </motion.g>
-                )}
-              </AnimatePresence>
+              {/* Wrong item bounce out — EXACT v1 */}
+              {wrongItem && (
+                <motion.text
+                  key={wrongItem.id + '-wrong'}
+                  initial={{ x: 150, y: 150, opacity: 1 }}
+                  animate={{ x: 100 + Math.random() * 100, y: 30, opacity: 0, rotate: 360 }}
+                  transition={{ duration: 0.8 }}
+                  fontSize="28"
+                  textAnchor="middle">
+                  {wrongItem.emoji}
+                </motion.text>
+              )}
 
-              {/* "drop here" placeholder */}
+              {/* "drop here" text when empty — EXACT v1 */}
               {bowlItems.length === 0 && !wrongItem && (
-                <text x="150" y="165" textAnchor="middle" fill="rgba(255,255,255,0.2)"
-                  fontSize="13" fontFamily="var(--font-body)">
+                <text x="150" y="165" textAnchor="middle"
+                  fill="rgba(255,255,255,0.25)" fontSize="14" fontFamily="var(--font-body)">
                   drop here
                 </text>
               )}
             </svg>
           </div>
 
-          {/* Added count */}
+          {/* Wrong message below bowl — EXACT v1 */}
+          <AnimatePresence>
+            {wrongMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                style={{ textAlign: 'center', maxWidth: '260px' }}>
+                <p className="font-heading" style={{ color: '#FFB74D', fontSize: '1rem', marginBottom: '4px' }}>
+                  Hmm, that doesn't seem right...
+                </p>
+                <p style={{ color: '#FF8A65', fontSize: '0.8rem' }}>{wrongMsg}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* In bowl counter */}
           <p style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
-            In bowl: <strong style={{ color: remedy.color }}>{added.length} / {remedy.correctSet.length}</strong>
+            In bowl: <strong style={{ color: remedy.color }}>{addedIngredients.length} / {remedy.correctSet.length}</strong>
           </p>
 
-          {/* Reset Bowl */}
-          {added.length > 0 && (
-            <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              onClick={handleReset}
-              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              style={{ padding: '8px 20px', borderRadius: 20, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', cursor: 'pointer' }}>
-              🗑️ Reset Bowl
-            </motion.button>
-          )}
+          {/* Reset Bowl button — EXACT v1 */}
+          <motion.button
+            onClick={handleReset}
+            whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+            style={{
+              padding: '10px 24px', borderRadius: '24px',
+              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+              color: 'var(--color-text-secondary)', fontSize: '0.85rem', fontWeight: 600,
+              cursor: 'pointer',
+            }}>
+            🗑️ Reset Bowl
+          </motion.button>
         </div>
 
-        {/* ── Ingredient Shelf ── */}
-        <div style={{ flex: '1 1 240px', maxWidth: 380, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.15em', color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>
+        {/* ── Ingredient Shelf (exact v1) ── */}
+        <div style={{ flex: '1 1 280px', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          <p style={{
+            fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.15em',
+            color: 'var(--color-text-secondary)', textTransform: 'uppercase',
+          }}>
             Ingredient Shelf — Tap to Add
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(82px, 1fr))', gap: 10, width: '100%' }}>
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+            gap: '10px', width: '100%',
+          }}>
             {allItems.map(item => {
-              const a = isAdded(item.id)
-              const disc = discovered[item.id]
-              const isWrong = !!disc && !a
+              const added = isAdded(item.id)
+              const disc  = discovered[item.id]
+              const isWrong = !!disc && !added
               return (
-                <motion.button key={item.id}
-                  onClick={() => tap(item)} disabled={a}
-                  whileHover={!a ? { scale: 1.07, y: -3 } : {}} whileTap={!a ? { scale: 0.92 } : {}}
-                  animate={wrongItem?.id === item.id ? { x: [-6, 6, -4, 4, 0] } : {}}
+                <motion.button
+                  key={item.id}
+                  onClick={() => handleIngredientTap(item)}
+                  disabled={added}
+                  whileHover={!added ? { scale: 1.06, y: -2 } : {}}
+                  whileTap={!added ? { scale: 0.94 } : {}}
                   style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                    padding: isWrong ? '8px 6px' : '12px 8px', borderRadius: 14,
-                    cursor: a ? 'default' : 'pointer',
-                    background: a ? 'rgba(0,200,83,0.1)' : isWrong ? 'rgba(255,80,80,0.08)' : 'rgba(255,255,255,0.06)',
-                    border: `2px solid ${a ? 'rgba(0,200,83,0.35)' : isWrong ? 'rgba(255,80,80,0.3)' : 'rgba(255,255,255,0.1)'}`,
-                    position: 'relative', transition: 'all 0.2s', opacity: a ? 0.45 : 1,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                    padding: '12px 8px', borderRadius: '12px',
+                    background: added ? 'rgba(0,200,83,0.1)' : isWrong ? 'rgba(255,80,80,0.08)' : 'rgba(255,255,255,0.06)',
+                    border: `2px solid ${added ? 'rgba(0,200,83,0.3)' : isWrong ? 'rgba(255,80,80,0.3)' : 'rgba(255,255,255,0.1)'}`,
+                    cursor: added ? 'default' : 'pointer',
+                    opacity: added ? 0.4 : 1,
+                    transition: 'all 0.2s',
+                    position: 'relative',
                   }}>
-                  {a && <span style={{ position: 'absolute', top: 3, right: 5, fontSize: '0.6rem' }}>✅</span>}
+                  {added && <span style={{ position: 'absolute', top: 3, right: 5, fontSize: '0.6rem' }}>✅</span>}
                   {isWrong && <span style={{ position: 'absolute', top: 3, right: 5, fontSize: '0.6rem' }}>❌</span>}
-                  <div style={{ width: 42, height: 42, borderRadius: '50%', background: `${item.color}22`, border: `2px solid ${item.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
+                  <div style={{
+                    width: '44px', height: '44px', borderRadius: '50%',
+                    background: `${item.color}22`, border: `2px solid ${item.color}44`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.4rem',
+                  }}>
                     {item.emoji}
                   </div>
-                  <span style={{ fontSize: '0.62rem', fontWeight: 600, textAlign: 'center', color: isWrong ? 'rgba(255,120,100,0.8)' : 'var(--color-text-secondary)', lineHeight: 1.2 }}>{item.name}</span>
+                  <span style={{
+                    fontSize: '0.65rem', color: isWrong ? 'rgba(255,120,100,0.8)' : 'var(--color-text-secondary)',
+                    fontWeight: 600, textAlign: 'center', lineHeight: 1.2,
+                  }}>
+                    {item.name}
+                  </span>
+                  {/* Property clue tags for wrong picks */}
                   {isWrong && disc.slice(0, 2).map(p => (
-                    <span key={p} style={{ fontSize: '0.47rem', color: 'rgba(255,160,100,0.85)', background: 'rgba(255,80,80,0.1)', borderRadius: 4, padding: '1px 4px', textAlign: 'center' }}>
+                    <span key={p} style={{
+                      fontSize: '0.47rem', color: 'rgba(255,160,100,0.85)',
+                      background: 'rgba(255,80,80,0.1)', borderRadius: 4,
+                      padding: '1px 4px', textAlign: 'center',
+                    }}>
                       {PROPERTY_LABELS[p] || p}
                     </span>
                   ))}
@@ -236,6 +293,6 @@ export function Day1_Alchemy({ remedy, onComplete }) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

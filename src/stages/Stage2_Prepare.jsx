@@ -9,12 +9,6 @@ import { useGameState } from '../hooks/useGameState'
 import { ACTIONS } from '../context/GameContext'
 import { getRemedyByDay, getAllIngredients, getWrongPickFeedback, PROPERTY_LABELS } from '../data/remedies'
 import { Day1_Alchemy } from '../minigames/Day1_Alchemy'
-import { Day2_Experiment } from '../minigames/Day2_Experiment'
-import { Day3_Memory } from '../minigames/Day3_Memory'
-import { Day4_SpeedCatch } from '../minigames/Day4_SpeedCatch'
-import { Day5_Dosage } from '../minigames/Day5_Dosage'
-import { Day6_CardMatch } from '../minigames/Day6_CardMatch'
-import { Day7_GrandLab } from '../minigames/Day7_GrandLab'
 import MolecularCinematics from '../components/animations/MolecularCinematics'
 // Science descriptions per day for microscope phase
 const MICRO_TEXT = {
@@ -244,12 +238,6 @@ function GrindBowl({ remedyColor, crushProgress, onProgressChange, StepIndicator
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100dvh', padding: '64px 16px 100px', gap: '14px' }}>
-      <h2 className="font-heading" style={{ color: remedyColor, fontSize: 'clamp(1.2rem, 4vw, 1.6rem)' }}>
-        🔨 Crush the Ingredients!
-      </h2>
-      <p className="game-text" style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
-        Fresh ingredients release more healing compounds when crushed first!
-      </p>
       <StepIndicator />
 
       <p style={{ color: '#f5c842', fontWeight: 600, fontSize: '0.9rem' }}>
@@ -486,12 +474,6 @@ function StirBowl({ remedyColor, stirProgress, onProgressChange, StepIndicator, 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100dvh', padding: '72px 16px 100px', gap: '16px' }}>
-      <h2 className="font-heading" style={{ color: remedyColor, fontSize: 'clamp(1.2rem, 4vw, 1.6rem)' }}>
-        🧪 Prepare the Remedy
-      </h2>
-      <p className="game-text" style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
-        Find the right ingredients, mix them, and heat to the perfect temperature!
-      </p>
       <StepIndicator />
       <p style={{ color: '#f5c842', fontWeight: 600, fontSize: '0.9rem' }}>
         {isDone ? '✅ Perfectly mixed!' : 'Move your finger in circles inside the bowl! 🌀'}
@@ -904,12 +886,6 @@ export default function Stage2_Prepare() {
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100dvh', padding: '60px 16px 100px', gap: '10px' }}>
-        <h2 className="font-heading" style={{ color: remedy.color, fontSize: 'clamp(1.2rem, 4vw, 1.6rem)' }}>
-          🧪 Prepare the Remedy
-        </h2>
-        <p className="game-text" style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
-          Find the right ingredients, mix them, and heat to the perfect temperature!
-        </p>
         <StepIndicator />
         <p style={{ color: '#f5c842', fontWeight: 600, fontSize: '0.9rem' }}>
           Hold the flame to heat! Find the sweet spot 🔥
@@ -1142,17 +1118,7 @@ export default function Stage2_Prepare() {
           {remedy.parmanu.emoji} {remedy.parmanu.moleculeName} at work!
         </motion.h2>
 
-        {/* Action text HUD */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-          style={{
-            background: 'rgba(255,255,255,0.05)', border: `1px solid ${remedy.parmanu.color}44`,
-            padding: '12px 16px', borderRadius: '12px', maxWidth: '600px', width: '100%',
-            textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '4px'
-          }}>
-          <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: 1.4 }}>
-            {remedy.parmanu.kidsExplanation}
-          </p>
-        </motion.div>
+
 
         {/* Kill counter HUD */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
@@ -1174,19 +1140,17 @@ export default function Stage2_Prepare() {
           </span>
         </motion.div>
 
-        {/* Canvas */}
+        {/* Canvas / Cinematic Container */}
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5 }}
           style={{
-            width: '100%', maxWidth: '600px', aspectRatio: '3/2',
+            width: '100%', maxWidth: '800px', aspectRatio: '16/9',
             borderRadius: '16px', overflow: 'hidden',
-            border: `2px solid ${allKilled ? remedy.parmanu.color : remedy.parmanu.color + '66'}`,
-            boxShadow: `0 0 40px ${allKilled ? remedy.parmanu.color + '66' : remedy.parmanu.color + '22'}`,
             position: 'relative',
           }}>
           {/* Only render interactive canvas during microscope phase */}
           {phase === 'microscope' && (
-            <canvas ref={canvasRef} width={600} height={400}
+            <canvas ref={canvasRef} width={800} height={450}
               style={{ width: '100%', height: '100%', display: 'block', cursor: 'crosshair' }} />
           )}
           
@@ -1242,6 +1206,20 @@ export default function Stage2_Prepare() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Action text HUD as an overlay at the bottom */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            style={{
+              position: 'absolute', bottom: 16, left: 16, right: 16,
+              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+              border: `1px solid ${remedy.parmanu.color}44`,
+              padding: '8px 12px', borderRadius: '12px',
+              textAlign: 'center', zIndex: 10
+            }}>
+            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', margin: 0, lineHeight: 1.4 }}>
+              {remedy.parmanu.kidsExplanation}
+            </p>
+          </motion.div>
         </motion.div>
 
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.82rem', textAlign: 'center', maxWidth: 400 }}>
@@ -1276,18 +1254,9 @@ export default function Stage2_Prepare() {
     )
   }
 
-  // ═══ ROUTER — Dynamic Minigames per Day ═══
+  // ═══ ROUTER — Unified Selection ═══
   function renderMinigame() {
-    switch (remedy.day) {
-      case 1: return <Day1_Alchemy remedy={remedy} onComplete={handleMinigameComplete} />
-      case 2: return <Day2_Experiment remedy={remedy} onComplete={handleMinigameComplete} />
-      case 3: return <Day3_Memory remedy={remedy} onComplete={handleMinigameComplete} />
-      case 4: return <Day4_SpeedCatch remedy={remedy} onComplete={handleMinigameComplete} />
-      case 5: return <Day5_Dosage remedy={remedy} onComplete={handleMinigameComplete} />
-      case 6: return <Day6_CardMatch remedy={remedy} onComplete={handleMinigameComplete} />
-      case 7: return <Day7_GrandLab remedy={remedy} onComplete={handleMinigameComplete} />
-      default: return <Day1_Alchemy remedy={remedy} onComplete={handleMinigameComplete} />
-    }
+    return <Day1_Alchemy remedy={remedy} onComplete={handleMinigameComplete} />
   }
 
   return (

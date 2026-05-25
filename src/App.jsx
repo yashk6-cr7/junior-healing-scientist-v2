@@ -13,6 +13,7 @@ import SoundManager from './components/SoundManager'
 import ProgressBar from './components/ProgressBar'
 import HealerJournal from './components/HealerJournal'
 import ParmanuAlbum from './components/ParmanuAlbum'
+import BonusGames from './components/BonusGames'
 
 const stageComponents = {
   1: Stage1_Diagnose,
@@ -36,6 +37,9 @@ function App() {
   // highlightId: the molecule ID to spotlight (set after a new unlock)
   const [albumOpen, setAlbumOpen] = React.useState(false)
   const [highlightId, setHighlightId] = React.useState(null)
+  const [bonusOpen, setBonusOpen] = React.useState(false)
+
+  const isGameComplete = (state.earnedBadges || []).includes('junior_healing_scientist')
 
   // Listen for new unlocks and auto-open album on first unlock
   const prevUnlockedCountRef = React.useRef(0)
@@ -99,6 +103,38 @@ function App() {
         <span>{(state.unlockedParmanus || []).length}/7</span>
       </motion.button>
 
+      {/* ── Bonus Games Button ── */}
+      {isGameComplete && (
+        <motion.button
+          onClick={() => setBonusOpen(true)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.92 }}
+          title="Open Bonus Lab Games"
+          style={{
+            position: 'fixed',
+            top: '16px',
+            right: '90px',
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 14px',
+            borderRadius: 'var(--radius-full, 999px)',
+            background: 'rgba(0, 200, 83, 0.85)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(0,255,136,0.5)',
+            cursor: 'pointer',
+            fontSize: '0.82rem',
+            color: 'white',
+            fontWeight: 800,
+            boxShadow: '0 0 16px rgba(0,255,136,0.3)',
+          }}
+        >
+          <span>🎮</span>
+          <span>Bonus Games</span>
+        </motion.button>
+      )}
+
       {/* Day indicator */}
       <div style={{
         position: 'fixed',
@@ -154,6 +190,12 @@ function App() {
         onClose={() => setAlbumOpen(false)}
         unlockedIds={state.unlockedParmanus || []}
         highlightId={highlightId}
+      />
+
+      {/* ── Bonus Games Modal ── */}
+      <BonusGames 
+        isOpen={bonusOpen} 
+        onClose={() => setBonusOpen(false)} 
       />
     </div>
   )

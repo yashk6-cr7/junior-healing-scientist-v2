@@ -5,6 +5,7 @@
  */
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useGameState } from '../hooks/useGameState'
 
 // All ingredient science cards — unlocked by day
 const JOURNAL_ENTRIES = [
@@ -87,11 +88,14 @@ const JOURNAL_ENTRIES = [
   },
 ]
 
-export default function HealerJournal({ currentDay }) {
+export default function HealerJournal() {
+  const { state } = useGameState()
   const [isOpen, setIsOpen] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState(null)
 
-  const unlockedEntries = JOURNAL_ENTRIES.filter(e => e.unlocksOnDay <= currentDay)
+  const unlockedEntries = JOURNAL_ENTRIES.filter(e => 
+    e.unlocksOnDay < state.currentDay || (e.unlocksOnDay === state.currentDay && state.currentStage === 3)
+  )
   const lockedCount = JOURNAL_ENTRIES.length - unlockedEntries.length
 
   return (

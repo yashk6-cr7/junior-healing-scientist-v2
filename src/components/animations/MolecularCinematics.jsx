@@ -1709,22 +1709,27 @@ function PhaseSubtitle({ phase, label, body, color }) {
   return (
     <AnimatePresence mode="wait">
       <motion.div key={phase}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 10 }}
         transition={{ duration: 0.55 }}
         style={{
-          padding: '16px 20px',
+          width: '300px',
+          padding: '32px 24px',
           background: '#050D18',
-          borderTop: `1px solid ${color}33`,
+          borderLeft: `1px solid ${color}33`,
           zIndex: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          flexShrink: 0
         }}>
-        <p style={{ color, fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase',
-          letterSpacing: '0.14em', margin: '0 0 5px' }}>
+        <p style={{ color, fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase',
+          letterSpacing: '0.14em', margin: '0 0 12px' }}>
           {label}
         </p>
-        <p style={{ color: 'rgba(255,255,255,0.92)', fontSize: '1rem', margin: 0,
-          lineHeight: 1.6, maxWidth: '860px' }}>
+        <p style={{ color: 'rgba(255,255,255,0.92)', fontSize: '1.05rem', margin: 0,
+          lineHeight: 1.6 }}>
           {body}
         </p>
       </motion.div>
@@ -1771,7 +1776,7 @@ export default function MolecularCinematics({ day, onComplete }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       style={{ position: 'absolute', inset: 0, background: '#030812',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 50 }}>
+        display: 'flex', flexDirection: 'row', overflow: 'hidden', zIndex: 50 }}>
       {/* Progress bar */}
       <PhaseProgressBar phase={phase} total={TOTAL_PHASES} color={color} />
       {/* Timer ring */}

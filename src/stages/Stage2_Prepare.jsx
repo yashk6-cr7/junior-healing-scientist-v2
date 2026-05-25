@@ -1140,17 +1140,17 @@ export default function Stage2_Prepare() {
           </span>
         </motion.div>
 
-        {/* Canvas / Cinematic Container */}
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5 }}
           style={{
-            width: '100%', maxWidth: '800px', aspectRatio: '16/9',
+            width: '100%', maxWidth: '1100px', height: '540px',
             borderRadius: '16px', overflow: 'hidden',
             position: 'relative',
+            display: 'flex'
           }}>
           {/* Only render interactive canvas during microscope phase */}
           {phase === 'microscope' && (
-            <canvas ref={canvasRef} width={800} height={450}
+            <canvas ref={canvasRef} width={1100} height={540}
               style={{ width: '100%', height: '100%', display: 'block', cursor: 'crosshair' }} />
           )}
           

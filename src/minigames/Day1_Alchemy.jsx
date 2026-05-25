@@ -216,7 +216,7 @@ export function Day1_Alchemy({ remedy, onComplete }) {
           display: 'flex', alignItems: 'center', gap: 16,
           padding: '12px 18px', borderRadius: 22,
           border: '2px solid rgba(255,255,255,0.1)',
-          width: '100%', maxWidth: 720,
+          width: '100%', maxWidth: '720px',
         }}>
         <ArjunCharacter mood={arjunMood} size={0.75} />
         <div style={{ flex: 1 }}>
@@ -252,7 +252,7 @@ export function Day1_Alchemy({ remedy, onComplete }) {
       }}>
 
         {/* ── Bowl Column ── */}
-        <div style={{ flex: '1 1 280px', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <div style={{ flex: '1 1 250px', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
 
           {/* Bowl SVG + Canvas overlay */}
           <div style={{ position: 'relative', width: '100%', maxWidth: '300px', aspectRatio: '1.2' }}>
@@ -361,7 +361,7 @@ export function Day1_Alchemy({ remedy, onComplete }) {
         </div>
 
         {/* ── Ingredient Shelf ── */}
-        <div style={{ flex: '1 1 280px', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <div style={{ flex: '1 1 250px', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
           <p style={{
             fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.15em',
             color: 'var(--color-text-secondary)', textTransform: 'uppercase',

@@ -68,109 +68,99 @@ function App() {
       {/* Healer's Journal */}
       <HealerJournal currentDay={state.currentDay} />
 
-      {/* ── Parmanu Album Button ── */}
-      {/* Sits top-right corner, opposite the journal */}
-      <motion.button
-        id="parmanu-album-btn"
-        onClick={() => setAlbumOpen(true)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.92 }}
-        animate={{
-          boxShadow: (state.unlockedParmanus || []).length > 0
-            ? ['0 0 0px rgba(255,215,0,0)', '0 0 16px rgba(255,215,0,0.5)', '0 0 0px rgba(255,215,0,0)']
-            : 'none',
-        }}
-        transition={{ repeat: Infinity, duration: 2.5 }}
-        title="Open Parmanu Collection"
-        style={{
-          position: 'fixed',
-          top: '16px',
-          right: '16px',
-          zIndex: 50,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          padding: '8px 14px',
-          borderRadius: 'var(--radius-full, 999px)',
-          background: 'rgba(27, 40, 56, 0.85)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,215,0,0.2)',
-          cursor: 'pointer',
-          fontSize: '0.82rem',
-          color: '#FFD700',
-          fontWeight: 600,
-        }}
-      >
-        <span>⚛️</span>
-        <span>{(state.unlockedParmanus || []).length}/7</span>
-      </motion.button>
+      {/* ── Top Navigation Bar ── */}
+      <div style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0,
+        padding: '16px',
+        zIndex: 50,
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: '12px',
+        pointerEvents: 'none', // Let clicks pass through empty space
+      }}>
+        {/* Left: Day indicator / Selector */}
+        <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+          <button onClick={() => setDayMenuOpen(!dayMenuOpen)} style={{
+            display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px',
+            borderRadius: 'var(--radius-full)', background: 'rgba(27, 40, 56, 0.8)',
+            backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)',
+            fontSize: '0.85rem', color: 'var(--color-text-secondary)', cursor: 'pointer'
+          }}>
+            <span style={{ color: 'var(--color-gold)' }}>Day {state.currentDay}</span>
+            <span>/ 7 ▼</span>
+          </button>
+          <AnimatePresence>
+            {dayMenuOpen && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'rgba(13, 27, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '120px' }}>
+                {Array.from({ length: 7 }).map((_, i) => {
+                  const d = i + 1;
+                  const isUnlocked = isGameComplete || d <= (state.unlockedParmanus?.length || 0) + 1;
+                  if (!isUnlocked) return null;
+                  return (
+                    <button key={d} onClick={() => { 
+                      dispatch({ type: ACTIONS.SET_DAY, payload: d }); 
+                      setDayMenuOpen(false); 
+                    }}
+                    style={{ padding: '8px 16px', background: d === state.currentDay ? 'rgba(255,215,0,0.15)' : 'transparent', color: d === state.currentDay ? '#FFD700' : 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', textAlign: 'left', fontWeight: 600 }}>
+                      Day {d}
+                    </button>
+                  )
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-      {/* ── Bonus Games Button ── */}
-      {isGameComplete && (
-        <motion.button
-          id="bonus-games-btn"
-          onClick={() => setBonusOpen(true)}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.92 }}
-          title="Open Bonus Lab Games"
-          style={{
-            position: 'fixed',
-            top: '16px',
-            right: '90px',
-            zIndex: 50,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '8px 14px',
-            borderRadius: 'var(--radius-full, 999px)',
-            background: 'rgba(0, 200, 83, 0.85)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(0,255,136,0.5)',
-            cursor: 'pointer',
-            fontSize: '0.82rem',
-            color: 'white',
-            fontWeight: 800,
-            boxShadow: '0 0 16px rgba(0,255,136,0.3)',
-          }}
-        >
-          <span>🎮</span>
-          <span>Bonus Games</span>
-        </motion.button>
-      )}
-
-      {/* Day indicator / Selector */}
-      <div style={{ position: 'fixed', top: '16px', left: '16px', zIndex: 50 }}>
-        <button onClick={() => setDayMenuOpen(!dayMenuOpen)} style={{
-          display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px',
-          borderRadius: 'var(--radius-full)', background: 'rgba(27, 40, 56, 0.8)',
-          backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)',
-          fontSize: '0.85rem', color: 'var(--color-text-secondary)', cursor: 'pointer'
-        }}>
-          <span style={{ color: 'var(--color-gold)' }}>Day {state.currentDay}</span>
-          <span>/ 7 ▼</span>
-        </button>
-        <AnimatePresence>
-          {dayMenuOpen && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-              style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'rgba(13, 27, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '120px' }}>
-              {Array.from({ length: 7 }).map((_, i) => {
-                const d = i + 1;
-                // Allow navigating to any unlocked day
-                const isUnlocked = isGameComplete || d <= (state.unlockedParmanus?.length || 0) + 1;
-                if (!isUnlocked) return null;
-                return (
-                  <button key={d} onClick={() => { 
-                    dispatch({ type: ACTIONS.SET_DAY, payload: d }); 
-                    setDayMenuOpen(false); 
-                  }}
-                  style={{ padding: '8px 16px', background: d === state.currentDay ? 'rgba(255,215,0,0.15)' : 'transparent', color: d === state.currentDay ? '#FFD700' : 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', textAlign: 'left', fontWeight: 600 }}>
-                    Day {d}
-                  </button>
-                )
-              })}
-            </motion.div>
+        {/* Right: Actions */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end', pointerEvents: 'auto' }}>
+          {isGameComplete && (
+            <motion.button
+              id="bonus-games-btn"
+              onClick={() => setBonusOpen(true)}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.92 }}
+              title="Open Bonus Lab Games"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '8px 14px', borderRadius: 'var(--radius-full)',
+                background: 'rgba(0, 200, 83, 0.85)', backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(0,255,136,0.5)', cursor: 'pointer',
+                fontSize: '0.82rem', color: 'white', fontWeight: 800,
+                boxShadow: '0 0 16px rgba(0,255,136,0.3)',
+              }}
+            >
+              <span>🎮</span>
+              <span className="hide-on-mobile">Bonus Games</span>
+            </motion.button>
           )}
-        </AnimatePresence>
+          <motion.button
+            id="parmanu-album-btn"
+            onClick={() => setAlbumOpen(true)}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.92 }}
+            animate={{
+              boxShadow: (state.unlockedParmanus || []).length > 0
+                ? ['0 0 0px rgba(255,215,0,0)', '0 0 16px rgba(255,215,0,0.5)', '0 0 0px rgba(255,215,0,0)']
+                : 'none',
+            }}
+            transition={{ repeat: Infinity, duration: 2.5 }}
+            title="Open Parmanu Collection"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '8px 14px', borderRadius: 'var(--radius-full)',
+              background: 'rgba(27, 40, 56, 0.85)', backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,215,0,0.2)', cursor: 'pointer',
+              fontSize: '0.82rem', color: '#FFD700', fontWeight: 600,
+            }}
+          >
+            <span>⚛️</span>
+            <span>{(state.unlockedParmanus || []).length}/7</span>
+          </motion.button>
+        </div>
       </div>
 
       {/* Stage content with page transitions */}

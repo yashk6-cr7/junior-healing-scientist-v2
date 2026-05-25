@@ -147,7 +147,8 @@ export default function HealerJournal() {
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 201,
-                maxHeight: '85vh', borderRadius: '24px 24px 0 0',
+                maxHeight: '85vh', maxWidth: '600px', margin: '0 auto',
+                borderRadius: '24px 24px 0 0',
                 background: 'linear-gradient(135deg, #0f1a2e 0%, #1a0a2e 100%)',
                 border: '1px solid rgba(255,215,0,0.2)',
                 display: 'flex', flexDirection: 'column',

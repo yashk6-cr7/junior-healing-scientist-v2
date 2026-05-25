@@ -317,15 +317,27 @@ export default function Stage3_Heal() {
       {/* Continue button */}
       <AnimatePresence>
         {phase === 'done' && (
-          <motion.button
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="btn-primary"
-            onClick={handleNextDay}
-            style={{ padding: '14px 36px', fontSize: '1.1rem', zIndex: 20 }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '12px', zIndex: 20, marginTop: '10px' }}
           >
-            {state.currentDay >= 7 ? '🏆 See Final Results' : `Next Day → Day ${state.currentDay + 1}`}
-          </motion.button>
+            {state.currentDay >= 7 && (
+              <button 
+                className="btn-secondary" 
+                onClick={() => document.getElementById('bonus-games-btn')?.click()} 
+                style={{ padding: '12px 30px', fontSize: '1.05rem', background: '#00C853', color: 'white', border: 'none', borderRadius: '100px', cursor: 'pointer', fontWeight: 600, boxShadow: '0 4px 14px rgba(0, 200, 83, 0.4)' }}>
+                🎮 Play Bonus Lab Games
+              </button>
+            )}
+            <button
+              className="btn-primary"
+              onClick={handleNextDay}
+              style={{ padding: '14px 36px', fontSize: '1.1rem' }}
+            >
+              {state.currentDay >= 7 ? '🏆 See Final Results' : `Next Day → Day ${state.currentDay + 1}`}
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

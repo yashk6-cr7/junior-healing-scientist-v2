@@ -14,24 +14,24 @@ export function ArjunCharacter({ mood = 'neutral', size = 1 }) {
   const W = Math.round(110 * size)
   const H = Math.round(175 * size)
 
-  const mouth = isExcited ? 'M 36 57 Q 55 74 74 57'
-    : isHappy   ? 'M 40 56 Q 55 70 70 56'
-    : isWrong   ? 'M 40 64 Q 55 52 70 64'
-    : isYuck    ? 'M 36 60 Q 45 54 55 60 Q 65 66 74 60'
-    : isThink   ? 'M 44 60 Q 50 58 56 60 Q 62 62 68 60'
-    : 'M 42 60 Q 55 62 68 60'
+  const mouth = isExcited ? 'M 36 75 Q 55 92 74 75'
+    : isHappy   ? 'M 40 74 Q 55 88 70 74'
+    : isWrong   ? 'M 40 82 Q 55 70 70 82'
+    : isYuck    ? 'M 36 78 Q 45 72 55 78 Q 65 84 74 78'
+    : isThink   ? 'M 44 78 Q 50 76 56 78 Q 62 80 68 78'
+    : 'M 42 76 Q 55 78 68 76'
 
   const eyeRy  = isWrong ? 2 : isYuck ? 2.5 : isExcited ? 8 : isThink ? 5 : 6
   const eyeCol = isWrong ? '#EF5350' : isHappy ? '#1565C0' : '#1a1a1a'
 
-  const LBrow = isWrong  ? { x1:38,y1:32,x2:52,y2:28 }
-              : isHappy  ? { x1:38,y1:27,x2:52,y2:30 }
-              : isThink  ? { x1:38,y1:27,x2:52,y2:29 }
-              :             { x1:38,y1:30,x2:52,y2:30 }
-  const RBrow = isWrong  ? { x1:58,y1:28,x2:72,y2:32 }
-              : isHappy  ? { x1:58,y1:30,x2:72,y2:27 }
-              : isThink  ? { x1:58,y1:28,x2:72,y2:30 }
-              :             { x1:58,y1:30,x2:72,y2:30 }
+  const LBrow = isWrong  ? { x1:38,y1:48,x2:52,y2:44 }
+              : isHappy  ? { x1:38,y1:43,x2:52,y2:46 }
+              : isThink  ? { x1:38,y1:43,x2:52,y2:45 }
+              :             { x1:38,y1:46,x2:52,y2:46 }
+  const RBrow = isWrong  ? { x1:58,y1:44,x2:72,y2:48 }
+              : isHappy  ? { x1:58,y1:46,x2:72,y2:43 }
+              : isThink  ? { x1:58,y1:44,x2:72,y2:46 }
+              :             { x1:58,y1:46,x2:72,y2:46 }
 
   const shirtCol = isHappy ? '#1976D2' : isWrong ? '#546E7A' : '#37474F'
   const armL = isExcited ? 'M 35 110 Q 10 90 15 72'
@@ -100,25 +100,25 @@ export function ArjunCharacter({ mood = 'neutral', size = 1 }) {
         <ellipse cx="72" cy="28" rx="8" ry="6" fill="#3E2723" />
 
         {/* Eyes */}
-        <ellipse cx="41" cy="62" rx="7" ry={eyeRy} fill={eyeCol} />
-        <ellipse cx="69" cy="62" rx="7" ry={eyeRy} fill={eyeCol} />
+        <ellipse cx="41" cy="54" rx="7" ry={eyeRy} fill={eyeCol} />
+        <ellipse cx="69" cy="54" rx="7" ry={eyeRy} fill={eyeCol} />
         {!isWrong && !isYuck && <>
-          <circle cx="44" cy="58" r="2.5" fill="white" opacity="0.9" />
-          <circle cx="72" cy="58" r="2.5" fill="white" opacity="0.9" />
+          <circle cx="44" cy="50" r="2.5" fill="white" opacity="0.9" />
+          <circle cx="72" cy="50" r="2.5" fill="white" opacity="0.9" />
         </>}
         {isExcited && <>
-          <polygon points="41,54 42.5,58.5 47,58.5 43.5,61.5 44.5,66 41,63 37.5,66 38.5,61.5 35,58.5 39.5,58.5" fill="#FFD700" />
-          <polygon points="69,54 70.5,58.5 75,58.5 71.5,61.5 72.5,66 69,63 65.5,66 66.5,61.5 63,58.5 67.5,58.5" fill="#FFD700" />
+          <polygon points="41,46 42.5,50.5 47,50.5 43.5,53.5 44.5,58 41,55 37.5,58 38.5,53.5 35,50.5 39.5,50.5" fill="#FFD700" />
+          <polygon points="69,46 70.5,50.5 75,50.5 71.5,53.5 72.5,58 69,55 65.5,58 66.5,53.5 63,50.5 67.5,50.5" fill="#FFD700" />
         </>}
         {isYuck && <>
-          <line x1="35" y1="56" x2="47" y2="68" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
-          <line x1="47" y1="56" x2="35" y2="68" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
-          <line x1="63" y1="56" x2="75" y2="68" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
-          <line x1="75" y1="56" x2="63" y2="68" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
+          <line x1="35" y1="48" x2="47" y2="60" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
+          <line x1="47" y1="48" x2="35" y2="60" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
+          <line x1="63" y1="48" x2="75" y2="60" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
+          <line x1="75" y1="48" x2="63" y2="60" stroke="#EF5350" strokeWidth="3" strokeLinecap="round" />
         </>}
         {isThink && <>
-          <ellipse cx="41" cy="62" rx="7" ry="5" fill={eyeCol} />
-          <ellipse cx="69" cy="62" rx="7" ry="5" fill={eyeCol} />
+          <ellipse cx="41" cy="54" rx="7" ry="5" fill={eyeCol} />
+          <ellipse cx="69" cy="54" rx="7" ry="5" fill={eyeCol} />
           {/* Thought bubble */}
           <circle cx="85" cy="35" r="12" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
           <circle cx="78" cy="50" r="5" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
@@ -131,14 +131,14 @@ export function ArjunCharacter({ mood = 'neutral', size = 1 }) {
         <line x1={RBrow.x1} y1={RBrow.y1} x2={RBrow.x2} y2={RBrow.y2} stroke="#4E342E" strokeWidth="3" strokeLinecap="round" />
 
         {/* Nose */}
-        <path d="M 52 70 Q 55 76 58 70" fill="none" stroke="#BF8A6E" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M 52 64 Q 55 70 58 64" fill="none" stroke="#BF8A6E" strokeWidth="1.5" strokeLinecap="round" />
 
         {/* Mouth */}
         <path d={mouth} fill="none" stroke="#5D4037" strokeWidth="3" strokeLinecap="round" />
-        {isExcited && <path d="M 40 58 Q 55 72 70 58 L 70 65 Q 55 77 40 65 Z" fill="white" opacity="0.85" />}
+        {isExcited && <path d="M 40 76 Q 55 90 70 76 L 70 83 Q 55 95 40 83 Z" fill="white" opacity="0.85" />}
         {isHappy && <>
-          <ellipse cx="28" cy="74" rx="9" ry="5" fill="rgba(255,120,100,0.3)" />
-          <ellipse cx="82" cy="74" rx="9" ry="5" fill="rgba(255,120,100,0.3)" />
+          <ellipse cx="28" cy="68" rx="9" ry="5" fill="rgba(255,120,100,0.3)" />
+          <ellipse cx="82" cy="68" rx="9" ry="5" fill="rgba(255,120,100,0.3)" />
         </>}
         {isWrong && <>
           <ellipse cx="91" cy="46" rx="4" ry="6" fill="#40C4FF" opacity="0.75" />

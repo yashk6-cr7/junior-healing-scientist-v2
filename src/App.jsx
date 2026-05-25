@@ -14,6 +14,7 @@ import ProgressBar from './components/ProgressBar'
 import HealerJournal from './components/HealerJournal'
 import ParmanuAlbum from './components/ParmanuAlbum'
 import BonusGames from './components/BonusGames'
+import { ACTIONS } from './context/GameContext'
 
 const stageComponents = {
   1: Stage1_Diagnose,
@@ -29,7 +30,7 @@ const pageTransition = {
 }
 
 function App() {
-  const { state } = useGameState()
+  const { state, dispatch } = useGameState()
   const StageComponent = stageComponents[state.currentStage] || Stage1_Diagnose
 
   // ── Parmanu Album state ──
@@ -38,6 +39,7 @@ function App() {
   const [albumOpen, setAlbumOpen] = React.useState(false)
   const [highlightId, setHighlightId] = React.useState(null)
   const [bonusOpen, setBonusOpen] = React.useState(false)
+  const [dayMenuOpen, setDayMenuOpen] = React.useState(false)
 
   const isGameComplete = (state.earnedBadges || []).includes('junior_healing_scientist')
 
@@ -106,6 +108,7 @@ function App() {
       {/* ── Bonus Games Button ── */}
       {isGameComplete && (
         <motion.button
+          id="bonus-games-btn"
           onClick={() => setBonusOpen(true)}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.92 }}
@@ -135,25 +138,39 @@ function App() {
         </motion.button>
       )}
 
-      {/* Day indicator */}
-      <div style={{
-        position: 'fixed',
-        top: '16px',
-        left: '16px',
-        zIndex: 50,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        padding: '8px 16px',
-        borderRadius: 'var(--radius-full)',
-        background: 'rgba(27, 40, 56, 0.8)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        fontSize: '0.85rem',
-        color: 'var(--color-text-secondary)',
-      }}>
-        <span style={{ color: 'var(--color-gold)' }}>Day {state.currentDay}</span>
-        <span>/ 7</span>
+      {/* Day indicator / Selector */}
+      <div style={{ position: 'fixed', top: '16px', left: '16px', zIndex: 50 }}>
+        <button onClick={() => setDayMenuOpen(!dayMenuOpen)} style={{
+          display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px',
+          borderRadius: 'var(--radius-full)', background: 'rgba(27, 40, 56, 0.8)',
+          backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)',
+          fontSize: '0.85rem', color: 'var(--color-text-secondary)', cursor: 'pointer'
+        }}>
+          <span style={{ color: 'var(--color-gold)' }}>Day {state.currentDay}</span>
+          <span>/ 7 ▼</span>
+        </button>
+        <AnimatePresence>
+          {dayMenuOpen && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'rgba(13, 27, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '120px' }}>
+              {Array.from({ length: 7 }).map((_, i) => {
+                const d = i + 1;
+                // Allow navigating to any unlocked day
+                const isUnlocked = isGameComplete || d <= (state.unlockedParmanus?.length || 0) + 1;
+                if (!isUnlocked) return null;
+                return (
+                  <button key={d} onClick={() => { 
+                    dispatch({ type: ACTIONS.SET_DAY, payload: d }); 
+                    setDayMenuOpen(false); 
+                  }}
+                  style={{ padding: '8px 16px', background: d === state.currentDay ? 'rgba(255,215,0,0.15)' : 'transparent', color: d === state.currentDay ? '#FFD700' : 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', textAlign: 'left', fontWeight: 600 }}>
+                    Day {d}
+                  </button>
+                )
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Stage content with page transitions */}

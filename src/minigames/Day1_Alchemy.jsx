@@ -130,33 +130,42 @@ export function Day1_Alchemy({ remedy, onComplete }) {
               {/* Correct items inside bowl — drop in from above */}
               <AnimatePresence>
                 {bowlItems.map((item, i) => (
-                  <motion.text
+                  <motion.g
                     key={item.id}
                     initial={{ y: -150, opacity: 0, scale: 0.2 }}
                     animate={{ y: 0, opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0 }}
                     transition={{ type: 'spring', damping: 12, stiffness: 150, delay: 0.1 }}
-                    x={100 + (i % 3) * 38}
-                    y={148 + Math.floor(i / 3) * 28}
-                    fontSize="22"
-                    textAnchor="middle">
-                    {item.emoji}
-                  </motion.text>
+                  >
+                    <text
+                      x={100 + (i % 3) * 38}
+                      y={148 + Math.floor(i / 3) * 28}
+                      fontSize="22"
+                      textAnchor="middle">
+                      {item.emoji}
+                    </text>
+                  </motion.g>
                 ))}
               </AnimatePresence>
 
               {/* Wrong item — bounces up and out */}
               <AnimatePresence>
                 {wrongItem && (
-                  <motion.text
+                  <motion.g
                     key={wrongItem.id + '-bounce'}
-                    initial={{ x: 150, y: 160, opacity: 1, scale: 1 }}
-                    animate={{ x: 100 + Math.random() * 100, y: 20, opacity: 0, rotate: 380, scale: 0.3 }}
+                    initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                    animate={{ x: -50 + Math.random() * 100, y: -140, opacity: 0, rotate: 380, scale: 0.3 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.75, ease: 'easeOut' }}
-                    fontSize="28" textAnchor="middle">
-                    {wrongItem.emoji}
-                  </motion.text>
+                  >
+                    <text
+                      x="150"
+                      y="160"
+                      fontSize="28" 
+                      textAnchor="middle">
+                      {wrongItem.emoji}
+                    </text>
+                  </motion.g>
                 )}
               </AnimatePresence>
 

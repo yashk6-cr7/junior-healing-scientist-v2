@@ -112,11 +112,13 @@ export function Day1_Alchemy({ remedy, onComplete }) {
                 {bowlItems.length > 0 && (
                   <motion.path
                     key="liquid"
-                    d={`M 52 ${185 - bowlItems.length * 12} Q 52 212 150 212 Q 248 212 248 ${185 - bowlItems.length * 12}`}
+                    initial={{ d: `M 52 212 Q 150 212 248 212 Q 248 212 248 212 Q 150 212 52 212 Z`, opacity: 0 }}
+                    animate={{ 
+                      d: `M 52 ${185 - bowlItems.length * 12} Q 52 212 150 212 Q 248 212 248 ${185 - bowlItems.length * 12} Z`,
+                      opacity: 1 
+                    }}
+                    transition={{ duration: 0.6, type: 'spring', damping: 15 }}
                     fill={`${remedy.color}55`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
                   />
                 )}
               </AnimatePresence>
@@ -126,19 +128,22 @@ export function Day1_Alchemy({ remedy, onComplete }) {
                 fill="rgba(40,55,75,0.65)" stroke="#78909C" strokeWidth="3" />
 
               {/* Correct items inside bowl — drop in from above */}
-              {bowlItems.map((item, i) => (
-                <motion.text
-                  key={item.id}
-                  initial={{ y: -60, opacity: 0, scale: 0.5 }}
-                  animate={{ y: 0, opacity: 1, scale: 1 }}
-                  transition={{ type: 'spring', damping: 10, stiffness: 180 }}
-                  x={100 + (i % 3) * 38}
-                  y={148 + Math.floor(i / 3) * 28}
-                  fontSize="22"
-                  textAnchor="middle">
-                  {item.emoji}
-                </motion.text>
-              ))}
+              <AnimatePresence>
+                {bowlItems.map((item, i) => (
+                  <motion.text
+                    key={item.id}
+                    initial={{ y: -150, opacity: 0, scale: 0.2 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0 }}
+                    transition={{ type: 'spring', damping: 12, stiffness: 150, delay: 0.1 }}
+                    x={100 + (i % 3) * 38}
+                    y={148 + Math.floor(i / 3) * 28}
+                    fontSize="22"
+                    textAnchor="middle">
+                    {item.emoji}
+                  </motion.text>
+                ))}
+              </AnimatePresence>
 
               {/* Wrong item — bounces up and out */}
               <AnimatePresence>

@@ -1206,20 +1206,6 @@ export default function Stage2_Prepare() {
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Action text HUD as an overlay at the bottom */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            style={{
-              position: 'absolute', bottom: 16, left: 16, right: 16,
-              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-              border: `1px solid ${remedy.parmanu.color}44`,
-              padding: '8px 12px', borderRadius: '12px',
-              textAlign: 'center', zIndex: 10
-            }}>
-            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', margin: 0, lineHeight: 1.4 }}>
-              {remedy.parmanu.kidsExplanation}
-            </p>
-          </motion.div>
         </motion.div>
 
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.82rem', textAlign: 'center', maxWidth: 400 }}>

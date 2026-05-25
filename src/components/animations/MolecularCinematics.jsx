@@ -1714,9 +1714,9 @@ function PhaseSubtitle({ phase, label, body, color }) {
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.55 }}
         style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0,
-          padding: '14px 20px 20px',
-          background: 'linear-gradient(0deg, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.7) 75%, transparent 100%)',
+          padding: '16px 20px',
+          background: '#050D18',
+          borderTop: `1px solid ${color}33`,
           zIndex: 20,
         }}>
         <p style={{ color, fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase',
@@ -1798,10 +1798,11 @@ export default function MolecularCinematics({ day, onComplete }) {
       {/* SVG canvas */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', marginTop: '0px' }}>
         <AnimComponent phase={phase} />
-        {/* Subtitle strip */}
-        <PhaseSubtitle phase={phase} label={currentScript.label}
-          body={currentScript.body} color={color} />
       </div>
+      
+      {/* Subtitle strip - Rendered below the canvas instead of over it */}
+      <PhaseSubtitle phase={phase} label={currentScript.label}
+        body={currentScript.body} color={color} />
     </motion.div>
   )
 }

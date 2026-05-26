@@ -218,11 +218,11 @@ export function Day4_SteamSetup({ remedy, onComplete }) {
             <AnimatePresence>
               {hasTowel && (
                 <motion.div
-                  initial={{ y: -200, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
+                  initial={{ y: -200, x: '-50%', opacity: 0 }}
+                  animate={{ y: 0, x: '-50%', opacity: 1 }}
                   transition={{ type: 'spring', bounce: 0.4 }}
                   style={{
-                    position: 'absolute', top: 90, left: '50%', transform: 'translateX(-50%)',
+                    position: 'absolute', top: 90, left: '50%',
                     zIndex: 20, pointerEvents: 'none'
                   }}
                 >
@@ -246,8 +246,8 @@ export function Day4_SteamSetup({ remedy, onComplete }) {
             <AnimatePresence>
               {hasBowl && (
                 <motion.div
-                  initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                  style={{ position: 'absolute', bottom: 34, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}
+                  initial={{ scale: 0, x: '-50%', opacity: 0 }} animate={{ scale: 1, x: '-50%', opacity: 1 }}
+                  style={{ position: 'absolute', bottom: 34, left: '50%', zIndex: 10 }}
                 >
                   <svg width="120" height="60" viewBox="0 0 120 60">
                     {/* Bowl back rim */}

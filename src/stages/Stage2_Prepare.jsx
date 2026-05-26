@@ -9,6 +9,7 @@ import { useGameState } from '../hooks/useGameState'
 import { ACTIONS } from '../context/GameContext'
 import { getRemedyByDay, getAllIngredients, getWrongPickFeedback, PROPERTY_LABELS } from '../data/remedies'
 import { Day1_Alchemy } from '../minigames/Day1_Alchemy'
+import { Day4_SteamSetup } from '../minigames/Day4_SteamSetup'
 import MolecularCinematics from '../components/animations/MolecularCinematics'
 // Science descriptions per day for microscope phase
 const MICRO_TEXT = {
@@ -1242,6 +1243,9 @@ export default function Stage2_Prepare() {
 
   // ═══ ROUTER — Unified Selection ═══
   function renderMinigame() {
+    if (state.currentDay === 4) {
+      return <Day4_SteamSetup remedy={remedy} onComplete={handleMinigameComplete} />
+    }
     return <Day1_Alchemy remedy={remedy} onComplete={handleMinigameComplete} />
   }
 

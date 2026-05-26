@@ -184,18 +184,18 @@ export function Day4_SpeedCatch({ remedy, onComplete }) {
             <motion.button key={f.uid}
               initial={{ y: -60 }} animate={{ y: GAME_H + 60 }}
               transition={{ duration: FALL_SPEED_MS / 1000, ease: 'linear' }}
-              onClick={() => catchItem(f.uid, f.item, f.x)}
+              onPointerDown={() => catchItem(f.uid, f.item, f.x)}
               style={{
                 position: 'absolute', left: f.x, top: 0,
                 width: 64, height: 64, borderRadius: '50%',
                 background: `${f.item.color}22`,
                 border: `3px solid ${isC ? f.item.color + '99' : 'rgba(255,80,80,0.4)'}`,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-                cursor: 'pointer', padding: 0,
+                cursor: 'pointer', padding: 0, touchAction: 'none',
                 boxShadow: isC ? `0 0 12px ${f.item.color}44` : 'none',
               }}>
-              <span style={{ fontSize: '1.5rem' }}>{f.item.emoji}</span>
-              <span style={{ fontSize: '0.42rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600, textAlign: 'center', lineHeight: 1.1 }}>
+              <span style={{ fontSize: '1.5rem', pointerEvents: 'none' }}>{f.item.emoji}</span>
+              <span style={{ fontSize: '0.42rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600, textAlign: 'center', lineHeight: 1.1, pointerEvents: 'none' }}>
                 {f.item.name.split(' ')[0]}
               </span>
             </motion.button>

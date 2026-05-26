@@ -144,17 +144,26 @@ function SteamCinematic({ onDone, remedyColor }) {
   const [step, setStep] = useState(0)
   // step 0: normal → step 1: bend down → step 2: towel drops → step 3: steam puffs → done
   useEffect(() => {
-    const t1 = setTimeout(() => setStep(1), 600)
-    const t2 = setTimeout(() => setStep(2), 1400)
-    const t3 = setTimeout(() => setStep(3), 2200)
-    const t4 = setTimeout(() => onDone(), 3400)
+    const t1 = setTimeout(() => setStep(1), 1000)
+    const t2 = setTimeout(() => setStep(2), 2500)
+    const t3 = setTimeout(() => setStep(3), 4200)
+    const t4 = setTimeout(() => onDone(), 7500)
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4) }
   }, [onDone])
 
   return (
-    <div style={{ position: 'relative', width: 300, height: 340, margin: '0 auto' }}>
+    <div style={{ position: 'relative', width: 300, height: 340, margin: '0 auto', overflow: 'hidden', borderRadius: 16, background: 'rgba(0,0,0,0.12)' }}>
       {/* Table */}
       <div style={{ position: 'absolute', bottom: 28, left: 10, right: 10, height: 8, background: '#5D4037', borderRadius: 4, zIndex: 2 }} />
+
+      {/* Arjun — behind table */}
+      <motion.div
+        animate={{ y: step >= 1 ? 40 : 0, scale: step >= 1 ? 1.05 : 1 }}
+        transition={{ duration: 1.2, ease: 'easeInOut' }}
+        style={{ position: 'absolute', bottom: 36, left: '50%', x: '-50%', zIndex: 1, transformOrigin: 'bottom center' }}
+      >
+        <ArjunCharacter mood={step >= 3 ? 'excited' : 'happy'} size={1.2} />
+      </motion.div>
 
       {/* Bowl */}
       <div style={{ position: 'absolute', bottom: 36, left: '50%', x: '-50%', zIndex: 3 }}>
@@ -163,41 +172,32 @@ function SteamCinematic({ onDone, remedyColor }) {
 
       {/* Steam during cinematic */}
       {step >= 2 && (
-        <div style={{ position: 'absolute', inset: 0 }}>
-          {[...Array(8)].map((_, i) => (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 15, pointerEvents: 'none' }}>
+          {[...Array(12)].map((_, i) => (
             <motion.div key={i}
-              initial={{ x: 130 + (Math.random() - 0.5) * 40, y: 260, scale: 0, opacity: 0.7 }}
-              animate={{ x: 130 + (Math.random() - 0.5) * 60, y: 60, scale: 2, opacity: 0 }}
-              transition={{ duration: 2, delay: i * 0.15, repeat: Infinity }}
-              style={{ position: 'absolute', width: 24, height: 24, borderRadius: '50%', background: '#81C784' }}
+              initial={{ x: 130 + (Math.random() - 0.5) * 60, y: 260, scale: 0, opacity: 0.7 }}
+              animate={{ x: 130 + (Math.random() - 0.5) * 80, y: 40, scale: 2.5, opacity: 0 }}
+              transition={{ duration: 2.5, delay: i * 0.2, repeat: Infinity }}
+              style={{ position: 'absolute', width: 30, height: 30, borderRadius: '50%', background: '#81C784', filter: 'blur(4px)' }}
             />
           ))}
         </div>
       )}
 
-      {/* Arjun — rotates to face bowl */}
-      <motion.div
-        animate={{ rotateX: step >= 1 ? 60 : 0, y: step >= 1 ? 40 : 0 }}
-        transition={{ duration: 0.8, ease: 'easeInOut' }}
-        style={{ position: 'absolute', bottom: 36, left: '50%', x: '-50%', zIndex: 10, transformOrigin: 'bottom center', perspective: 400 }}
-      >
-        <ArjunCharacter mood={step >= 3 ? 'excited' : 'happy'} size={1.4} />
-      </motion.div>
-
       {/* Towel drapes over head */}
       {step >= 2 && (
         <motion.div
-          initial={{ y: -150, x: '-50%', opacity: 0 }}
-          animate={{ y: step >= 2 ? 40 : -150, x: '-50%', opacity: 1 }}
-          transition={{ type: 'spring', bounce: 0.3, duration: 0.8 }}
-          style={{ position: 'absolute', top: 60, left: '50%', zIndex: 20 }}
+          initial={{ y: -300, x: '-50%', opacity: 0 }}
+          animate={{ y: step >= 2 ? 0 : -300, x: '-50%', opacity: 1 }}
+          transition={{ type: 'spring', bounce: 0.3, duration: 1.5 }}
+          style={{ position: 'absolute', bottom: 26, left: '50%', zIndex: 20 }}
         >
-          <svg width="200" height="200" viewBox="0 0 200 200">
+          <svg width="220" height="220" viewBox="0 0 220 220">
             {/* Draped tent shape covering head + bowl */}
-            <path d="M 10 170 Q 15 80 100 20 Q 185 80 190 170 Z"
-              fill="#EF9A9A" stroke="#E57373" strokeWidth="3" />
-            <path d="M 20 130 Q 100 145 180 130" stroke="#FFCDD2" strokeWidth="6" fill="none" />
-            <path d="M 18 155 Q 100 168 182 155" stroke="#FFCDD2" strokeWidth="6" fill="none" />
+            <path d="M 10 210 Q 20 80 110 20 Q 200 80 210 210 Z"
+              fill="#EF9A9A" stroke="#E57373" strokeWidth="3" opacity="0.95" />
+            <path d="M 25 150 Q 110 165 195 150" stroke="#FFCDD2" strokeWidth="5" fill="none" opacity="0.8" />
+            <path d="M 22 175 Q 110 190 198 175" stroke="#FFCDD2" strokeWidth="5" fill="none" opacity="0.8" />
           </svg>
         </motion.div>
       )}
@@ -205,15 +205,18 @@ function SteamCinematic({ onDone, remedyColor }) {
       {/* Ahh speech bubble */}
       {step >= 3 && (
         <motion.div
-          initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          initial={{ scale: 0, opacity: 0, y: 20 }} 
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: 'spring', bounce: 0.5 }}
           style={{
-            position: 'absolute', top: 10, right: 10, zIndex: 30,
+            position: 'absolute', top: 20, right: 10, zIndex: 30,
             background: '#1B2A3B', border: '2px solid #40C4FF',
-            borderRadius: 16, padding: '8px 14px',
+            borderRadius: 16, padding: '10px 16px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
           }}
         >
-          <p style={{ color: '#40C4FF', fontWeight: 800, fontSize: '1.1rem', margin: 0 }}>Ahhhh... 😌</p>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', margin: 0 }}>I can breathe!</p>
+          <p style={{ color: '#40C4FF', fontWeight: 800, fontSize: '1.2rem', margin: 0 }}>Ahhhh... 😌</p>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', margin: '4px 0 0 0' }}>I can breathe!</p>
         </motion.div>
       )}
     </div>

@@ -579,18 +579,22 @@ export default function Stage2_Prepare() {
   const animRef = useRef(null)
   const heatInterval = useRef(null)
   const isDay7 = state.currentDay >= 7
-  const needsCrush = state.currentDay >= 4
+  const needsCrush = state.currentDay >= 4 && state.currentDay !== 4  // Day 4 skips crush
 
   // Handle completion from any minigame
   const handleMinigameComplete = useCallback((selectedIds) => {
     setAddedIngredients(selectedIds)
     const items = allItems.filter(i => selectedIds.includes(i.id))
     setBowlItems(items)
-    
+    // Day 4 (Steam Therapy) skips crush/stir/heat — go straight to microscope
+    if (state.currentDay === 4) {
+      setTimeout(() => setPhase('microscope'), 1500)
+      return
+    }
     setTimeout(() => {
       setPhase(needsCrush ? 'crush' : 'stir')
     }, 1500)
-  }, [allItems, needsCrush])
+  }, [allItems, needsCrush, state.currentDay])
   const isComplete = useMemo(() => {
     if (!remedy) return false
     return remedy.correctSet.every(id => addedIngredients.includes(id))

@@ -325,7 +325,7 @@ export default function Stage3_Heal() {
             {state.currentDay >= 7 && (
               <button 
                 className="btn-secondary" 
-                onClick={() => document.getElementById('bonus-games-btn')?.click()} 
+                onClick={() => window.dispatchEvent(new CustomEvent('open-bonus-games'))} 
                 style={{ padding: '12px 30px', fontSize: '1.05rem', background: '#00C853', color: 'white', border: 'none', borderRadius: '100px', cursor: 'pointer', fontWeight: 600, boxShadow: '0 4px 14px rgba(0, 200, 83, 0.4)' }}>
                 🎮 Play Bonus Lab Games
               </button>

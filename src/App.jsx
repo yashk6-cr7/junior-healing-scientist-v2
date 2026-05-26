@@ -33,6 +33,12 @@ function App() {
   const { state, dispatch } = useGameState()
   const StageComponent = stageComponents[state.currentStage] || Stage1_Diagnose
 
+  useEffect(() => {
+    const handleOpenBonus = () => setBonusOpen(true)
+    window.addEventListener('open-bonus-games', handleOpenBonus)
+    return () => window.removeEventListener('open-bonus-games', handleOpenBonus)
+  }, [])
+
   // ── Parmanu Album state ──
   // albumOpen: whether the album modal is visible
   // highlightId: the molecule ID to spotlight (set after a new unlock)

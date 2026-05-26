@@ -170,36 +170,48 @@ function SteamCinematic({ onDone, remedyColor }) {
         <Bowl hasWater hasOil />
       </div>
 
-      {/* Steam during cinematic */}
-      {step >= 2 && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 15, pointerEvents: 'none' }}>
-          {[...Array(12)].map((_, i) => (
-            <motion.div key={i}
-              initial={{ x: 130 + (Math.random() - 0.5) * 60, y: 260, scale: 0, opacity: 0.7 }}
-              animate={{ x: 130 + (Math.random() - 0.5) * 80, y: 40, scale: 2.5, opacity: 0 }}
-              transition={{ duration: 2.5, delay: i * 0.2, repeat: Infinity }}
-              style={{ position: 'absolute', width: 30, height: 30, borderRadius: '50%', background: '#81C784', filter: 'blur(4px)' }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Towel drapes over head */}
+      {/* Towel drapes over head and bowl - FULLY OPAQUE */}
       {step >= 2 && (
         <motion.div
           initial={{ y: -300, x: '-50%', opacity: 0 }}
           animate={{ y: step >= 2 ? 0 : -300, x: '-50%', opacity: 1 }}
-          transition={{ type: 'spring', bounce: 0.3, duration: 1.5 }}
+          transition={{ type: 'spring', bounce: 0.25, duration: 1.2 }}
           style={{ position: 'absolute', bottom: 26, left: '50%', zIndex: 20 }}
         >
-          <svg width="220" height="220" viewBox="0 0 220 220">
-            {/* Draped tent shape covering head + bowl */}
-            <path d="M 10 210 Q 20 80 110 20 Q 200 80 210 210 Z"
-              fill="#EF9A9A" stroke="#E57373" strokeWidth="3" opacity="0.95" />
-            <path d="M 25 150 Q 110 165 195 150" stroke="#FFCDD2" strokeWidth="5" fill="none" opacity="0.8" />
-            <path d="M 22 175 Q 110 190 198 175" stroke="#FFCDD2" strokeWidth="5" fill="none" opacity="0.8" />
+          <svg width="280" height="240" viewBox="0 0 280 240" style={{ filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.3))' }}>
+            {/* Main draped towel shape */}
+            <path d="
+              M 15 230
+              C 20 150, 70 100, 100 60
+              C 115 30, 165 30, 180 60
+              C 210 100, 260 150, 265 230
+              C 270 240, 10 240, 15 230 Z
+            " fill="#EF9A9A" stroke="#D32F2F" strokeWidth="3" strokeLinejoin="round" />
+            
+            {/* Fabric Folds for realism */}
+            <path d="M 100 60 C 90 120, 60 180, 30 232" stroke="#E57373" strokeWidth="3" fill="none" strokeLinecap="round" />
+            <path d="M 180 60 C 190 120, 220 180, 250 232" stroke="#E57373" strokeWidth="3" fill="none" strokeLinecap="round" />
+            <path d="M 140 35 C 130 100, 150 180, 140 236" stroke="#E57373" strokeWidth="2" fill="none" opacity="0.8" strokeLinecap="round" />
+            
+            {/* Towel Stripes (curved to show volume) */}
+            <path d="M 32 175 C 100 200, 180 200, 248 175" stroke="#FFCDD2" strokeWidth="7" fill="none" />
+            <path d="M 23 205 C 100 230, 180 230, 257 205" stroke="#FFCDD2" strokeWidth="7" fill="none" />
           </svg>
         </motion.div>
+      )}
+
+      {/* Steam escaping around the edges of the towel (in front of towel) */}
+      {step >= 2 && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 25, pointerEvents: 'none' }}>
+          {[...Array(14)].map((_, i) => (
+            <motion.div key={i}
+              initial={{ x: 150 + (Math.random() - 0.5) * 200, y: 260, scale: 0, opacity: 0.8 }}
+              animate={{ x: 150 + (Math.random() - 0.5) * 260, y: 40 + Math.random() * 50, scale: 2.5 + Math.random(), opacity: 0 }}
+              transition={{ duration: 2.5 + Math.random(), delay: i * 0.15, repeat: Infinity }}
+              style={{ position: 'absolute', width: 35, height: 35, borderRadius: '50%', background: '#81C784', filter: 'blur(6px)' }}
+            />
+          ))}
+        </div>
       )}
 
       {/* Ahh speech bubble */}

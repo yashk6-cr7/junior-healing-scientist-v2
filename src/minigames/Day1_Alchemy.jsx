@@ -281,20 +281,7 @@ export function Day1_Alchemy({ remedy, onComplete }) {
               <ellipse cx="150" cy="100" rx="112" ry="22"
                 fill="rgba(40,55,75,0.6)" stroke="#78909C" strokeWidth="3" />
 
-              {/* Items in bowl — exact v1 motion.text drop-in */}
-              {bowlItems.map((item, i) => (
-                <motion.text
-                  key={item.id}
-                  initial={{ y: -50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.25 }}
-                  x={100 + (i % 3) * 40}
-                  y={145 + Math.floor(i / 3) * 28}
-                  fontSize="22"
-                  textAnchor="middle">
-                  {item.emoji}
-                </motion.text>
-              ))}
+              {/* Items in bowl — exact v1 motion.text drop-in removed by user request */}
 
               {/* Wrong item bounce out */}
               {wrongItem && (

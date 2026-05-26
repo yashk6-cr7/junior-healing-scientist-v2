@@ -222,7 +222,7 @@ export function Day4_SteamSetup({ remedy, onComplete }) {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ type: 'spring', bounce: 0.4 }}
                   style={{
-                    position: 'absolute', top: 50, left: '50%', transform: 'translateX(-50%)',
+                    position: 'absolute', top: 90, left: '50%', transform: 'translateX(-50%)',
                     zIndex: 20, pointerEvents: 'none'
                   }}
                 >
@@ -239,7 +239,7 @@ export function Day4_SteamSetup({ remedy, onComplete }) {
 
             {/* Steam Canvas (rises from bowl to Arjun's face) */}
             <div style={{ position: 'absolute', bottom: 38, left: 0, width: '100%', height: '200px', zIndex: 5 }}>
-              <SteamCanvas isHotWater={hasWater} isEucalyptus={hasOil} width={300} height={200} />
+              <SteamCanvas isHotWater={hasWater && hasBowl} isEucalyptus={hasOil} width={300} height={200} />
             </div>
 
             {/* Bowl on table (in front of Arjun) */}

@@ -39,16 +39,17 @@ export const REMEDIES = [
       { id: 'milk',         name: 'Milk',            emoji: '🥛', color: '#FFFFFF',  properties: ['soothing', 'immunity-boost'] },
       { id: 'haldi',        name: 'Haldi (Turmeric)',emoji: '🟡', color: '#FFD700',  properties: ['anti-inflammatory', 'antiviral'] },
       { id: 'black_pepper', name: 'Black Pepper',    emoji: '⚫', color: '#555555',  properties: ['bioenhancer', 'warming'] },
-      { id: 'honey',        name: 'Honey',           emoji: '🍯', color: '#FFA000',  properties: ['antibacterial', 'soothing'] },
     ],
     distractors: [
+      // ⚠️ Honey is a distractor — Ayurveda says heating honey makes it toxic!
+      { id: 'honey',     name: 'Honey',      emoji: '🍯', color: '#FFA000', properties: ['sugary'], wrongReason: '🍯 In Ayurveda, boiling honey creates toxins! Add it only after cooling.' },
       { id: 'ketchup',   name: 'Ketchup',    emoji: '🍅', color: '#FF1744', properties: ['acidic', 'junk'] },
       { id: 'ice_cream', name: 'Ice Cream',  emoji: '🍦', color: '#CE93D8', properties: ['cooling', 'sugary'] },
       { id: 'soda',      name: 'Soda',       emoji: '🥤', color: '#40C4FF', properties: ['carbonated', 'cooling'] },
       { id: 'oil',       name: 'Cooking Oil',emoji: '🫙', color: '#FFE082', properties: ['junk'] },
       { id: 'salt',      name: 'Salt',       emoji: '🧂', color: '#ECEFF1', properties: ['junk'] },
     ],
-    correctSet: ['milk', 'haldi', 'black_pepper', 'honey'],
+    correctSet: ['milk', 'haldi', 'black_pepper'],
     particleScene: 'HaldiParticles',
     parmanu: {
       id: 'curcumin',
@@ -322,11 +323,13 @@ export function getAllIngredients(day) {
 }
 
 export function getWrongPickFeedback(item) {
+  // If item has a specific Ayurvedic/educational reason, show it
+  if (item.wrongReason)     return { msg: item.wrongReason,                                          effect: 'neutral' }
   const props = item.properties || []
-  if (props.includes('cooling'))    return { msg: '🥶 Too cold! Arjun is shivering more!',     effect: 'worse' }
-  if (props.includes('carbonated')) return { msg: '😬 Soda made Arjun burp and cough!',        effect: 'worse' }
-  if (props.includes('acidic'))     return { msg: '🔥 Too acidic! Arjun\'s throat burns!',     effect: 'worse' }
-  if (props.includes('junk'))       return { msg: '😑 Junk food — zero medicinal value!',      effect: 'neutral' }
-  if (props.includes('sugary'))     return { msg: '🍬 Too sweet — no healing effect here!',    effect: 'neutral' }
-  return { msg: '😐 No change... that ingredient doesn\'t help here.',                          effect: 'neutral' }
+  if (props.includes('cooling'))    return { msg: '🥶 Too cold! Arjun is shivering more!',           effect: 'worse' }
+  if (props.includes('carbonated')) return { msg: '😬 Soda made Arjun burp and cough!',              effect: 'worse' }
+  if (props.includes('acidic'))     return { msg: '🔥 Too acidic! Arjun\'s throat burns!',           effect: 'worse' }
+  if (props.includes('junk'))       return { msg: '😑 Junk food — zero medicinal value!',            effect: 'neutral' }
+  if (props.includes('sugary'))     return { msg: '🍬 Too sweet — no healing effect here!',          effect: 'neutral' }
+  return { msg: '😐 No change... that ingredient doesn\'t help here.',                               effect: 'neutral' }
 }

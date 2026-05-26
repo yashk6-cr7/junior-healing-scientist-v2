@@ -1260,11 +1260,11 @@ export default function Stage2_Prepare() {
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         minHeight: '100dvh', padding: '72px 16px 100px', gap: '20px',
       }}>
-      {/* Title */}
+      {/* Title — remedy name hidden to keep it a discovery challenge */}
       <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
         className="font-heading"
         style={{ color: remedy.color, textAlign: 'center', fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', marginBottom: 8 }}>
-        {remedy.icon} Prepare {remedy.name}
+        {remedy.icon} Day {remedy.day} — Prepare Your Remedy
       </motion.h2>
 
       {/* Render the specific minigame for this day */}
